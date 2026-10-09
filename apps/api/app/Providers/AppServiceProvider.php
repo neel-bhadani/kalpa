@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Core\Workspaces\CurrentWorkspace;
 use App\Models\PersonalAccessToken;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -17,7 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // A fresh one per request.
+        $this->app->scoped(CurrentWorkspace::class);
     }
 
     /**
@@ -26,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        // Lists are { data, meta }: drop Laravel's extra "links" block, the cursors are in meta.
+        AnonymousResourceCollection::macro('paginationInformation', fn ($request, $paginated, $default) => [
+            'meta' => $default['meta'],
+        ]);
 
         // 5 sign-in attempts per minute for each email + IP pair.
         RateLimiter::for('login', function (Request $request) {

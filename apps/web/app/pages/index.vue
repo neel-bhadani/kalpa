@@ -24,6 +24,7 @@ async function logout() {
       </button>
 
       <div class="mt-4 flex justify-center gap-4 text-xs text-muted">
+        <NuxtLink to="/projects" class="hover:text-text">Projects</NuxtLink>
         <NuxtLink to="/settings/devices" class="hover:text-text">Devices</NuxtLink>
         <NuxtLink to="/status" class="hover:text-text">Service status</NuxtLink>
       </div>

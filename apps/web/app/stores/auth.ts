@@ -25,6 +25,9 @@ export const useAuthStore = defineStore('auth', () => {
   // True once we've asked the API who is signed in.
   const checked = ref(false)
 
+  // The workspace sent with workspace-scoped API calls. The personal one for now.
+  const currentWorkspace = computed(() => workspaces.value[0] ?? null)
+
   function setProfile(profile: Profile | null) {
     user.value = profile?.user ?? null
     workspaces.value = profile?.workspaces ?? []
@@ -66,5 +69,5 @@ export const useAuthStore = defineStore('auth', () => {
     useDevicesStore().reset()
   }
 
-  return { user, workspaces, checked, fetchMe, register, login, logout }
+  return { user, workspaces, currentWorkspace, checked, fetchMe, register, login, logout }
 })
