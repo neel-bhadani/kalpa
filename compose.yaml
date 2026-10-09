@@ -1,0 +1,89 @@
+name: kalpa
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: kalpa-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kalpa}
+      POSTGRES_USER: ${POSTGRES_USER:-kalpa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kalpa}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 512m
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    container_name: kalpa-redis
+    command: ["redis-server", "--maxmemory", "96mb"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 128m
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./docker/api
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    image: kalpa-api:dev
+    container_name: kalpa-api
+    # Install PHP packages on first start (fresh clone), then serve /app/public.
+    command: ["sh", "-c", "[ -d vendor ] || composer install; exec frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile"]
+    volumes:
+      - ./apps/api:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  web:
+    image: node:24-alpine
+    container_name: kalpa-web
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /app
+    # Install npm packages on first start (fresh clone), then run the Nuxt dev server.
+    command: ["sh", "-c", "[ -d node_modules ] || npm ci; exec npm run dev -- --host 0.0.0.0 --port 3000"]
+    environment:
+      HOME: /tmp
+      NODE_OPTIONS: --max-old-space-size=768
+      NUXT_TELEMETRY_DISABLED: 1
+    volumes:
+      - ./apps/web:/app
+    mem_limit: 1g
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    container_name: kalpa-caddy
+    ports:
+      - "127.0.0.1:${KALPA_HTTP_PORT:-8088}:80"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - api
+      - web
+    mem_limit: 64m
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:

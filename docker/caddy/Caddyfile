@@ -1,0 +1,11 @@
+:80 {
+	# Laravel API
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	# Everything else: Nuxt
+	handle {
+		reverse_proxy web:3000
+	}
+}

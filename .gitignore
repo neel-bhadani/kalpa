@@ -1,0 +1,13 @@
+# Environment files (never commit)
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+vendor/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
