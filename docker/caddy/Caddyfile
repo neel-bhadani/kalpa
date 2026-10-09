@@ -1,6 +1,7 @@
 :80 {
-	# Laravel API
-	handle /api/* {
+	# Laravel API and Sanctum (CSRF cookie)
+	@api path /api/* /sanctum/*
+	handle @api {
 		reverse_proxy api:8000
 	}
 

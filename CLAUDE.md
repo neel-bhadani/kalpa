@@ -24,7 +24,7 @@ Full design: https://claude.ai/code/artifact/10ea28ab-05fa-4f70-ac42-2c36fb1f9d0
 | Node | 24 LTS |
 | Database | PostgreSQL 18, Redis 8 |
 | Files | S3 API: SeaweedFS locally (added in P0 step 6) |
-| Gateway | Caddy 2 on port 8088 (Apache uses port 80 on this machine) |
+| Gateway | Caddy 2 on port 8089 (Apache uses port 80, another project uses 8088 on this machine) |
 | Tests | Pest (API, on PostgreSQL), Vitest (TS), Playwright (e2e, later) |
 | Dev | Docker Compose, Makefile |
 
@@ -48,7 +48,7 @@ kalpa/
 └── docs/             ADRs, licences.md, credits.md
 ```
 
-Services are prefixed `kalpa-`. Local URL: `http://localhost:8088`.
+Services are prefixed `kalpa-`. Local URL: `http://localhost:8089`.
 
 ## Rules
 

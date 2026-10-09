@@ -16,3 +16,8 @@ html,
 body {
   @apply bg-bg text-text font-sans;
 }
+
+/* Text input used by the auth forms. */
+.field {
+  @apply mt-1 block w-full rounded-lg border border-muted/30 bg-bg px-3 py-2 text-sm text-text outline-none focus:border-accent;
+}

@@ -15,7 +15,7 @@ docker compose exec api php artisan migrate
 make test
 ```
 
-Open http://localhost:8088 (or the `KALPA_HTTP_PORT` you set in `.env`).
+Open http://localhost:8089 (or the `KALPA_HTTP_PORT` you set in `.env`).
 The page shows green or red for app, db and redis. API health: `GET /api/v1/health`.
 
 ## Make targets

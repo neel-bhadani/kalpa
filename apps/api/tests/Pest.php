@@ -1,8 +1,12 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
 /*
-| Feature tests run inside a Laravel test case. Add RefreshDatabase here
-| once there are tables to reset between tests.
+| Feature tests run inside a Laravel test case, on a fresh kalpa_test database.
 */
 
-pest()->extend(Tests\TestCase::class)->in('Feature');
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Feature');
