@@ -29,8 +29,11 @@ export type TaskMode = 'auto' | 'semi' | 'manual'
 export type Task = {
   id: string
   project_id: string
+  project_name?: string
   module: string
+  module_name: string | null
   kind: string
+  kind_label: string | null
   title: string
   status: TaskStatus
   allowed_transitions: TaskStatus[]
@@ -38,7 +41,10 @@ export type Task = {
   assigned_to: 'user' | 'assistant'
   depends_on: string[]
   progress: number
+  has_unsynced_changes: boolean
   row_version: number
+  // Only on single-task routes.
+  checkpoint?: unknown
   updated_at: string
 }
 
@@ -50,4 +56,22 @@ export type TaskEvent = {
   actor_type: 'user' | 'assistant' | 'system'
   data: Record<string, unknown>
   created_at: string
+}
+
+export type ServerModule = {
+  key: string
+  name: string
+  icon: string
+  version: string
+  task_kinds: { key: string; label: string }[]
+  enabled: boolean
+}
+
+export type Dashboard = {
+  data: {
+    continue: Task[]
+    counts: Record<TaskStatus, number>
+    tasks: Task[]
+  }
+  meta: CursorPage<Task>['meta']
 }

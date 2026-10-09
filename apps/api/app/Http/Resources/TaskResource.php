@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Core\Modules\ModuleRegistry;
 use App\Enums\TaskStatus;
 use App\Models\Task;
 use Illuminate\Http\Request;
@@ -14,11 +15,17 @@ class TaskResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $module = app(ModuleRegistry::class)->find($this->module);
+
         return [
             'id' => $this->id,
             'project_id' => $this->project_id,
+            'project_name' => $this->whenLoaded('project', fn () => $this->project->name),
             'module' => $this->module,
+            // Null when the module is no longer installed.
+            'module_name' => $module?->name(),
             'kind' => $this->kind,
+            'kind_label' => $module?->taskKinds()[$this->kind] ?? null,
             'title' => $this->title,
             'status' => $this->status,
             // The statuses the UI may offer next.

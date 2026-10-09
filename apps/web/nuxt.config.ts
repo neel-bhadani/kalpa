@@ -14,9 +14,15 @@ export default defineNuxtConfig({
   alias: {
     '@kalpa/core': `${packagesDir}/core/src`,
   },
+  typescript: {
+    // Let files in packages/ find vue's types too (paths are relative to .nuxt/).
+    tsConfig: { compilerOptions: { paths: { vue: ['../node_modules/vue'] } } },
+  },
   vite: {
     plugins: [tailwindcss()],
     // Let the dev server read the shared packages outside apps/web.
     server: { fs: { allow: [packagesDir] } },
+    // Files in packages/ import vue too; resolve it from apps/web/node_modules.
+    resolve: { dedupe: ['vue'] },
   },
 })

@@ -57,7 +57,7 @@ function makeProject(User $user, ?Workspace $workspace = null, string $name = 'F
     return app(CreateProject::class)->handle($workspace ?? workspaceOf($user), $user, ['name' => $name]);
 }
 
-function makeTask(Project $project, User $user, string $title = 'Write outline'): Task
+function makeTask(Project $project, User $user, string $title = 'Write outline', string $module = 'story', string $kind = 'write_story'): Task
 {
-    return app(CreateTask::class)->handle($project, $user, ['module' => 'story', 'kind' => 'outline', 'title' => $title]);
+    return app(CreateTask::class)->handle($project, $user, ['module' => $module, 'kind' => $kind, 'title' => $title]);
 }

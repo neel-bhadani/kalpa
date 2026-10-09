@@ -19,14 +19,14 @@ it('registers a device and is idempotent', function () {
 
     $first = $this->actingAs($user)->postJson('/api/v1/devices', devicePayload())
         ->assertOk()
-        ->assertJsonPath('tier', 'mid')
-        ->json();
+        ->assertJsonPath('data.tier', 'mid')
+        ->json('data');
 
     $this->travel(5)->minutes();
 
     $second = $this->actingAs($user)->postJson('/api/v1/devices', devicePayload(['tier' => 'low', 'name' => 'Other name']))
         ->assertOk()
-        ->json();
+        ->json('data');
 
     expect(UserDevice::count())->toBe(1)
         ->and($second['id'])->toBe($first['id'])
@@ -37,10 +37,10 @@ it('registers a device and is idempotent', function () {
 
 it('brings back a removed device when it checks in again', function () {
     $user = User::factory()->create();
-    $id = $this->actingAs($user)->postJson('/api/v1/devices', devicePayload())->json('id');
+    $id = $this->actingAs($user)->postJson('/api/v1/devices', devicePayload())->json('data.id');
 
     $this->actingAs($user)->deleteJson("/api/v1/devices/{$id}")->assertNoContent();
-    $this->actingAs($user)->postJson('/api/v1/devices', devicePayload())->assertOk()->assertJsonPath('id', $id);
+    $this->actingAs($user)->postJson('/api/v1/devices', devicePayload())->assertOk()->assertJsonPath('data.id', $id);
 
     expect(UserDevice::count())->toBe(1);
 });
@@ -54,32 +54,32 @@ it('validates the device', function () {
 
 it('lists, updates and removes my own devices', function () {
     $user = User::factory()->create();
-    $id = $this->actingAs($user)->postJson('/api/v1/devices', devicePayload())->json('id');
+    $id = $this->actingAs($user)->postJson('/api/v1/devices', devicePayload())->json('data.id');
 
     $this->actingAs($user)->getJson('/api/v1/devices')
         ->assertOk()
-        ->assertJsonCount(1)
-        ->assertJsonPath('0.id', $id);
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $id);
 
     $this->actingAs($user)->patchJson("/api/v1/devices/{$id}", ['name' => 'Work PC', 'tier_override' => 'high'])
         ->assertOk()
-        ->assertJsonPath('name', 'Work PC')
-        ->assertJsonPath('tier_override', 'high');
+        ->assertJsonPath('data.name', 'Work PC')
+        ->assertJsonPath('data.tier_override', 'high');
 
     $this->actingAs($user)->patchJson("/api/v1/devices/{$id}", ['tier_override' => null])
         ->assertOk()
-        ->assertJsonPath('tier_override', null);
+        ->assertJsonPath('data.tier_override', null);
 
     $this->actingAs($user)->deleteJson("/api/v1/devices/{$id}")->assertNoContent();
-    $this->actingAs($user)->getJson('/api/v1/devices')->assertJsonCount(0);
+    $this->actingAs($user)->getJson('/api/v1/devices')->assertJsonCount(0, 'data');
 });
 
 it("does not let a user see, edit or delete another user's device", function () {
     $owner = User::factory()->create();
     $other = User::factory()->create();
-    $id = $this->actingAs($owner)->postJson('/api/v1/devices', devicePayload())->json('id');
+    $id = $this->actingAs($owner)->postJson('/api/v1/devices', devicePayload())->json('data.id');
 
-    $this->actingAs($other)->getJson('/api/v1/devices')->assertOk()->assertJsonCount(0);
+    $this->actingAs($other)->getJson('/api/v1/devices')->assertOk()->assertJsonCount(0, 'data');
     $this->actingAs($other)->patchJson("/api/v1/devices/{$id}", ['name' => 'Mine now'])->assertForbidden();
     $this->actingAs($other)->deleteJson("/api/v1/devices/{$id}")->assertForbidden();
 

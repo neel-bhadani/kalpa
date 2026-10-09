@@ -40,7 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchMe() {
     try {
-      setProfile(await api<Profile>('/api/v1/me'))
+      setProfile((await api<{ data: Profile }>('/api/v1/me')).data)
     } catch {
       setProfile(null)
     }
@@ -49,24 +49,27 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function register(name: string, email: string, password: string) {
     await fetchCsrfCookie()
-    setProfile(await api<Profile>('/api/v1/auth/register', {
+    const { data } = await api<{ data: Profile }>('/api/v1/auth/register', {
       method: 'POST',
       body: { name, email, password },
-    }))
+    })
+    setProfile(data)
   }
 
   async function login(email: string, password: string) {
     await fetchCsrfCookie()
-    setProfile(await api<Profile>('/api/v1/auth/login', {
+    const { data } = await api<{ data: Profile }>('/api/v1/auth/login', {
       method: 'POST',
       body: { email, password },
-    }))
+    })
+    setProfile(data)
   }
 
   async function logout() {
     await api('/api/v1/auth/logout', { method: 'POST' })
     setProfile(null)
     useDevicesStore().reset()
+    useModulesStore().reset()
   }
 
   return { user, workspaces, currentWorkspace, checked, fetchMe, register, login, logout }

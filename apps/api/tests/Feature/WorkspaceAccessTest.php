@@ -43,7 +43,7 @@ it('lets a viewer read but not write', function () {
         'base_version' => 1, 'patch' => [['op' => 'add', 'path' => '/style/look', 'value' => 'noir']],
     ])->assertForbidden();
     actingIn($viewer, $workspace)->postJson("/api/v1/projects/{$project->id}/tasks", [
-        'module' => 'story', 'kind' => 'outline', 'title' => 'Nope',
+        'module' => 'story', 'kind' => 'write_story', 'title' => 'Nope',
     ])->assertForbidden();
     actingIn($viewer, $workspace)->postJson("/api/v1/tasks/{$task->id}/status", ['to' => 'in_progress'])->assertForbidden();
     actingIn($viewer, $workspace)->deleteJson("/api/v1/tasks/{$task->id}")->assertForbidden();
@@ -59,7 +59,7 @@ it('lets an editor write but not delete a project', function () {
         ->json('data.id');
 
     actingIn($editor, $workspace)->postJson("/api/v1/projects/{$projectId}/tasks", [
-        'module' => 'story', 'kind' => 'outline', 'title' => 'Outline',
+        'module' => 'story', 'kind' => 'write_story', 'title' => 'Outline',
     ])->assertCreated();
 
     actingIn($editor, $workspace)->deleteJson("/api/v1/projects/{$projectId}")->assertForbidden();

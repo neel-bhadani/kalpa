@@ -20,7 +20,7 @@ class DeviceController extends Controller
     {
         $devices = $request->user()->devices()->latest('last_seen_at')->get();
 
-        return response()->json($devices);
+        return response()->json(['data' => $devices]);
     }
 
     public function store(Request $request, RegisterDevice $registerDevice): JsonResponse
@@ -42,7 +42,7 @@ class DeviceController extends Controller
             DeviceTier::from($data['tier']),
         );
 
-        return response()->json($device);
+        return response()->json(['data' => $device]);
     }
 
     public function update(Request $request, UserDevice $device, UpdateDevice $updateDevice): JsonResponse
@@ -52,7 +52,7 @@ class DeviceController extends Controller
             'tier_override' => ['sometimes', 'nullable', Rule::enum(DeviceTier::class)],
         ]);
 
-        return response()->json($updateDevice->handle($device, $data));
+        return response()->json(['data' => $updateDevice->handle($device, $data)]);
     }
 
     public function destroy(UserDevice $device, RemoveDevice $removeDevice): Response

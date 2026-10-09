@@ -20,4 +20,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (auth.user && guestPages.includes(to.path)) {
     return navigateTo('/')
   }
+
+  // The sidebar and task forms need the workspace's modules.
+  const modules = useModulesStore()
+  if (auth.user && !modules.loaded) {
+    await modules.load()
+  }
 })

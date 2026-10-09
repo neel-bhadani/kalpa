@@ -46,8 +46,7 @@ await load()
 
 <template>
   <main class="mx-auto max-w-3xl p-6">
-    <NuxtLink to="/" class="text-sm text-muted hover:text-text">← Back</NuxtLink>
-    <h1 class="mt-2 text-2xl font-semibold">Projects</h1>
+    <h1 class="text-2xl font-semibold">Projects</h1>
 
     <form class="mt-6 flex flex-wrap items-end gap-3 rounded-xl bg-panel p-4" @submit.prevent="create">
       <label class="min-w-48 flex-1">

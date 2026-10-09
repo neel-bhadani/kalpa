@@ -31,7 +31,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
         }
 
-        return response()->json($this->profile($user), 201);
+        return response()->json(['data' => $this->profile($user)], 201);
     }
 
     public function login(Request $request, LoginUser $loginUser): JsonResponse
@@ -43,7 +43,7 @@ class AuthController extends Controller
 
         $user = $loginUser->handle($request, $data['email'], $data['password']);
 
-        return response()->json($this->profile($user));
+        return response()->json(['data' => $this->profile($user)]);
     }
 
     public function logout(Request $request, LogoutUser $logoutUser): Response
@@ -55,7 +55,7 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json($this->profile($request->user()));
+        return response()->json(['data' => $this->profile($request->user())]);
     }
 
     /**

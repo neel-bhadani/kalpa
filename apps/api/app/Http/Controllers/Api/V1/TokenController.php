@@ -20,10 +20,10 @@ class TokenController extends Controller
 
         $token = $createApiToken->handle($data['email'], $data['password'], $data['device_name']);
 
-        return response()->json([
+        return response()->json(['data' => [
             'id' => $token->accessToken->id,
             'token' => $token->plainTextToken,
-        ], 201);
+        ]], 201);
     }
 
     public function destroy(Request $request, string $id): Response

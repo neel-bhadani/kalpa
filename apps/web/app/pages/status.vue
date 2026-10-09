@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePageMeta({ layout: false })
+
 type Health = { app: string; db: string; redis: string }
 
 // /api is routed to Laravel by Caddy.

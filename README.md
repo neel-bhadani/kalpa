@@ -26,5 +26,6 @@ The page shows green or red for app, db and redis. API health: `GET /api/v1/heal
 | `make logs` / `make ps` | Follow logs / list services |
 | `make sh-api` / `make sh-web` | Shell in the API / web container |
 | `make test` | Run all tests: Pest (`make test-api`, database `kalpa_test`) and Vitest (`make test-web`) |
+| `make module-keys` | Export the API's module keys to `packages/core/src/module-keys.json` (run by `make test`) |
 | `make typecheck` | Type-check the web app and the packages it imports |
 | `make fresh` | `migrate:fresh` on the dev database |

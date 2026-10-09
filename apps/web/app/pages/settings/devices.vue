@@ -29,9 +29,9 @@ await run(() => store.fetchAll())
 
 <template>
   <main class="mx-auto max-w-4xl p-6">
-    <NuxtLink to="/" class="text-sm text-muted hover:text-text">← Back</NuxtLink>
-    <h1 class="mt-2 text-2xl font-semibold">Devices</h1>
-    <p class="mt-1 text-sm text-muted">Where you use Kalpa Studio. The tier decides how much heavy work runs on each device.</p>
+    <h1 class="text-2xl font-semibold">Settings</h1>
+    <SettingsTabs class="mt-4" />
+    <p class="mt-6 text-sm text-muted">Where you use Kalpa Studio. The tier decides how much heavy work runs on each device.</p>
 
     <p v-if="error" class="mt-4 text-sm text-red-400">{{ error }}</p>
 

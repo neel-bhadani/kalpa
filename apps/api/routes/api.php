@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\ModuleController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectMemoryController;
 use App\Http\Controllers\Api\V1\TaskController;
@@ -34,6 +36,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Workspace-scoped: needs the X-Workspace-Id header (see EnsureWorkspaceMember).
 Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
+    Route::get('/modules', [ModuleController::class, 'index']);
+    Route::patch('/modules/{key}', [ModuleController::class, 'update']);
+
+    Route::get('/dashboard', DashboardController::class);
+
     Route::whereUuid(['project', 'task'])->group(function () {
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::post('/projects', [ProjectController::class, 'store']);

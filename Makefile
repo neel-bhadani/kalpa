@@ -1,4 +1,4 @@
-.PHONY: up down logs ps sh-api sh-web test test-api test-web typecheck fresh
+.PHONY: up down logs ps sh-api sh-web test test-api test-web module-keys typecheck fresh
 
 up:
 	docker compose up -d --build
@@ -18,10 +18,14 @@ sh-api:
 sh-web:
 	docker compose exec web sh
 
-test: test-api test-web
+test: test-api module-keys test-web
 
 test-api:
 	docker compose exec api php artisan test
+
+# Module keys from the API, for the web registry test (packages/core/src/modules.test.ts).
+module-keys:
+	docker compose exec -T api php artisan modules:keys > packages/core/src/module-keys.json
 
 test-web:
 	docker compose exec web npx vitest run

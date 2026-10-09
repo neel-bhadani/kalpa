@@ -21,9 +21,9 @@ it('registers a user with a personal workspace they own', function () {
         'password' => 'secret-password',
     ])
         ->assertCreated()
-        ->assertJsonPath('user.name', 'Ada')
-        ->assertJsonPath('workspaces.0.name', "Ada's workspace")
-        ->assertJsonPath('workspaces.0.role', 'owner');
+        ->assertJsonPath('data.user.name', 'Ada')
+        ->assertJsonPath('data.workspaces.0.name', "Ada's workspace")
+        ->assertJsonPath('data.workspaces.0.role', 'owner');
 
     $user = User::where('email', 'ada@example.com')->sole();
     $workspace = $user->workspaces()->sole();
@@ -56,8 +56,8 @@ it('logs in, shows me and logs out with the cookie session', function () {
 
     $this->getJson('/api/v1/me')
         ->assertOk()
-        ->assertJsonPath('user.email', 'ada@example.com')
-        ->assertJsonPath('workspaces.0.role', 'owner');
+        ->assertJsonPath('data.user.email', 'ada@example.com')
+        ->assertJsonPath('data.workspaces.0.role', 'owner');
 
     $this->postJson('/api/v1/auth/logout')->assertNoContent();
 
@@ -94,13 +94,13 @@ it('accepts a token from auth/tokens on me', function () {
         'device_name' => 'Ada laptop',
     ])
         ->assertCreated()
-        ->json('token');
+        ->json('data.token');
 
     $this->withHeaders(['Origin' => ''])
         ->withToken($token)
         ->getJson('/api/v1/me')
         ->assertOk()
-        ->assertJsonPath('user.email', 'ada@example.com');
+        ->assertJsonPath('data.user.email', 'ada@example.com');
 });
 
 it('deletes a token', function () {

@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Core\Modules\ModuleRegistry;
 use App\Core\Workspaces\CurrentWorkspace;
 use App\Models\PersonalAccessToken;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -21,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // A fresh one per request.
         $this->app->scoped(CurrentWorkspace::class);
+
+        $this->app->singleton(ModuleRegistry::class, fn () => new ModuleRegistry(config('modules.manifests')));
     }
 
     /**
@@ -34,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
         AnonymousResourceCollection::macro('paginationInformation', fn ($request, $paginated, $default) => [
             'meta' => $default['meta'],
         ]);
+
+        // Only workspace owners turn modules on or off.
+        Gate::define('manage-modules', fn () => $this->app->make(CurrentWorkspace::class)->isOwner());
 
         // 5 sign-in attempts per minute for each email + IP pair.
         RateLimiter::for('login', function (Request $request) {

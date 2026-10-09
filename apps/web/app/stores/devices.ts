@@ -78,11 +78,11 @@ export const useDevicesStore = defineStore('devices', () => {
 
   async function fetchAll() {
     currentClientId.value = clientId()
-    devices.value = await api<Device[]>('/api/v1/devices')
+    devices.value = (await api<{ data: Device[] }>('/api/v1/devices')).data
   }
 
   async function setTierOverride(id: string, tierOverride: DeviceTier | null) {
-    const updated = await api<Device>(`/api/v1/devices/${id}`, {
+    const { data: updated } = await api<{ data: Device }>(`/api/v1/devices/${id}`, {
       method: 'PATCH',
       body: { tier_override: tierOverride },
     })
