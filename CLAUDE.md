@@ -59,6 +59,7 @@ Services are prefixed `kalpa-`. Local URL: `http://localhost:8089`.
 - Every workspace-owned table has `workspace_id`. Every foreign key is indexed.
 - API routes live under `/api/v1`. Long work returns `202` with a job id and reports progress over Reverb.
 - Business logic goes in `app/Actions` (one use case per class), not in controllers.
+- The web app is a client-only SPA (ssr: false) so the same build runs in Tauri and Capacitor.
 - The API never handles large file bytes: browsers and workers use signed URLs to storage.
 - Every AI or heavy job goes through a `jobs` row with an idempotency key.
 - Don't add packages, services or tables beyond the current step without asking. For any new model, asset or dataset, state its licence first.

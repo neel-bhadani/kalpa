@@ -1,8 +1,10 @@
 <?php
 
+use App\Core\Database\EnumCheck;
+use App\Enums\WorkspacePlan;
+use App\Enums\WorkspaceRole;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -19,8 +21,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        // Mirrors App\Enums\WorkspacePlan.
-        DB::statement("ALTER TABLE workspaces ADD CONSTRAINT workspaces_plan_check CHECK (plan IN ('free', 'pro', 'team'))");
+        EnumCheck::add('workspaces', 'plan', WorkspacePlan::class);
 
         Schema::create('workspace_members', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -32,8 +33,7 @@ return new class extends Migration
             $table->unique(['workspace_id', 'user_id']);
         });
 
-        // Mirrors App\Enums\WorkspaceRole.
-        DB::statement("ALTER TABLE workspace_members ADD CONSTRAINT workspace_members_role_check CHECK (role IN ('owner', 'editor', 'viewer'))");
+        EnumCheck::add('workspace_members', 'role', WorkspaceRole::class);
     }
 
     public function down(): void

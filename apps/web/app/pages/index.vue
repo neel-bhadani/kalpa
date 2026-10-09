@@ -23,9 +23,10 @@ async function logout() {
         Log out
       </button>
 
-      <NuxtLink to="/status" class="mt-4 block text-center text-xs text-muted hover:text-text">
-        Service status
-      </NuxtLink>
+      <div class="mt-4 flex justify-center gap-4 text-xs text-muted">
+        <NuxtLink to="/settings/devices" class="hover:text-text">Devices</NuxtLink>
+        <NuxtLink to="/status" class="hover:text-text">Service status</NuxtLink>
+      </div>
     </section>
   </main>
 </template>

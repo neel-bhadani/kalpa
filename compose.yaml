@@ -57,7 +57,8 @@ services:
     image: node:24-alpine
     container_name: kalpa-web
     user: "${UID:-1000}:${GID:-1000}"
-    working_dir: /app
+    # Same layout as the repo, so apps/web can import ../../packages/* by path alias.
+    working_dir: /kalpa/apps/web
     # Install npm packages on first start (fresh clone), then run the Nuxt dev server.
     command: ["sh", "-c", "[ -d node_modules ] || npm ci; exec npm run dev -- --host 0.0.0.0 --port 3000"]
     environment:
@@ -65,7 +66,8 @@ services:
       NODE_OPTIONS: --max-old-space-size=768
       NUXT_TELEMETRY_DISABLED: 1
     volumes:
-      - ./apps/web:/app
+      - ./apps/web:/kalpa/apps/web
+      - ./packages:/kalpa/packages
     mem_limit: 1g
     restart: unless-stopped
 

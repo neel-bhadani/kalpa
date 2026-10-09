@@ -25,5 +25,6 @@ The page shows green or red for app, db and redis. API health: `GET /api/v1/heal
 | `make up` / `make down` | Start / stop the stack |
 | `make logs` / `make ps` | Follow logs / list services |
 | `make sh-api` / `make sh-web` | Shell in the API / web container |
-| `make test` | Run Pest tests (database `kalpa_test`) |
+| `make test` | Run all tests: Pest (`make test-api`, database `kalpa_test`) and Vitest (`make test-web`) |
+| `make typecheck` | Type-check the web app and the packages it imports |
 | `make fresh` | `migrate:fresh` on the dev database |

@@ -28,6 +28,11 @@ export const useAuthStore = defineStore('auth', () => {
   function setProfile(profile: Profile | null) {
     user.value = profile?.user ?? null
     workspaces.value = profile?.workspaces ?? []
+
+    // Signed in (app start, login or register): check this device in, in the background.
+    if (user.value) {
+      void useDevicesStore().registerCurrent()
+    }
   }
 
   async function fetchMe() {
@@ -58,6 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     await api('/api/v1/auth/logout', { method: 'POST' })
     setProfile(null)
+    useDevicesStore().reset()
   }
 
   return { user, workspaces, checked, fetchMe, register, login, logout }
