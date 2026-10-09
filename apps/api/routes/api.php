@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ModuleController;
 use App\Http\Controllers\Api\V1\ProjectController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Api\V1\ProjectMemoryController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaskDependencyController;
 use App\Http\Controllers\Api\V1\TokenController;
+use App\Http\Controllers\Api\V1\UploadController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -40,6 +42,16 @@ Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
 
     Route::get('/dashboard', DashboardController::class);
+
+    Route::whereUuid(['upload', 'file'])->group(function () {
+        Route::post('/uploads', [UploadController::class, 'store'])->middleware('throttle:uploads');
+        Route::get('/uploads/{upload}', [UploadController::class, 'show']);
+        Route::post('/uploads/{upload}/parts', [UploadController::class, 'parts']);
+        Route::post('/uploads/{upload}/complete', [UploadController::class, 'complete']);
+        Route::delete('/uploads/{upload}', [UploadController::class, 'destroy']);
+
+        Route::get('/files/{file}/url', [FileController::class, 'url']);
+    });
 
     Route::whereUuid(['project', 'task'])->group(function () {
         Route::get('/projects', [ProjectController::class, 'index']);

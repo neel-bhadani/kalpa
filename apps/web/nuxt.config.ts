@@ -15,14 +15,18 @@ export default defineNuxtConfig({
     '@kalpa/core': `${packagesDir}/core/src`,
   },
   typescript: {
-    // Let files in packages/ find vue's types too (paths are relative to .nuxt/).
-    tsConfig: { compilerOptions: { paths: { vue: ['../node_modules/vue'] } } },
+    // Let files in packages/ find the types of packages installed here (paths are relative to .nuxt/).
+    tsConfig: {
+      compilerOptions: {
+        paths: { 'vue': ['../node_modules/vue'], 'hash-wasm': ['../node_modules/hash-wasm'] },
+      },
+    },
   },
   vite: {
     plugins: [tailwindcss()],
     // Let the dev server read the shared packages outside apps/web.
     server: { fs: { allow: [packagesDir] } },
-    // Files in packages/ import vue too; resolve it from apps/web/node_modules.
-    resolve: { dedupe: ['vue'] },
+    // Files in packages/ import these too; resolve them from apps/web/node_modules.
+    resolve: { dedupe: ['vue', 'hash-wasm'] },
   },
 })

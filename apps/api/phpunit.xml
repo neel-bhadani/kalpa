@@ -25,6 +25,9 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_DATABASE" value="kalpa_test"/>
+        <env name="AWS_BUCKET" value="kalpa-test"/>
+        <!-- Tests upload parts from inside the api container, so sign URLs for the internal host. -->
+        <env name="AWS_PUBLIC_ENDPOINT" value="http://seaweedfs:8333"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

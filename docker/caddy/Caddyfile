@@ -5,6 +5,16 @@
 		reverse_proxy api:8000
 	}
 
+	# Object storage (SeaweedFS S3, bucket "kalpa"), for presigned URLs from the browser.
+	# Same origin as the app, so no CORS. The Host header is passed through unchanged,
+	# which the S3 signature includes. User files are sandboxed so they can't run scripts here.
+	@storage path /kalpa/*
+	handle @storage {
+		header X-Content-Type-Options nosniff
+		header Content-Security-Policy sandbox
+		reverse_proxy seaweedfs:8333
+	}
+
 	# Everything else: Nuxt
 	handle {
 		reverse_proxy web:3000

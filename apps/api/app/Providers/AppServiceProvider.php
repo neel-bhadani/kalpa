@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Core\Modules\ModuleRegistry;
+use App\Core\Storage\ObjectStorage;
 use App\Core\Workspaces\CurrentWorkspace;
 use App\Models\PersonalAccessToken;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -25,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(CurrentWorkspace::class);
 
         $this->app->singleton(ModuleRegistry::class, fn () => new ModuleRegistry(config('modules.manifests')));
+
+        $this->app->singleton(ObjectStorage::class, fn () => ObjectStorage::fromConfig(config('filesystems.disks.s3')));
     }
 
     /**
@@ -41,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Only workspace owners turn modules on or off.
         Gate::define('manage-modules', fn () => $this->app->make(CurrentWorkspace::class)->isOwner());
+
+        // Starting uploads: 60 a minute per user.
+        RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(60)->by((string) $request->user()?->id));
 
         // 5 sign-in attempts per minute for each email + IP pair.
         RateLimiter::for('login', function (Request $request) {

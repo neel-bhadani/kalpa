@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('style')->default(ProjectStyle::Mixed->value);
             $table->text('aspect_ratio')->default(AspectRatio::Wide->value);
-            // Foreign key to files is added in P0 step 6.
+            // Foreign key to files: added by the files migration, which runs later.
             $table->uuid('cover_file_id')->nullable();
             $table->text('status')->default(ProjectStatus::Active->value);
             $table->timestamp('last_opened_at')->nullable();
