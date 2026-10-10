@@ -1,18 +1,23 @@
 <script setup lang="ts">
 import {
-  ArrowLeftRight, BookOpen, Box, CirclePlay, Clapperboard, Folder, LayoutDashboard,
-  Megaphone, Mic, Music, Settings, Square, UserRound,
+  ArrowLeftRight, AudioLines, BookOpen, Box, CirclePlay, Clapperboard, File, Film, Folder, Image,
+  LayoutDashboard, Library, Megaphone, Mic, Music, Settings, Square, UserRound,
 } from '@lucide/vue'
 
 // Lucide icons by name. Only the icons listed here end up in the bundle.
 const icons = {
   'arrow-left-right': ArrowLeftRight,
+  'audio-lines': AudioLines,
   'book-open': BookOpen,
   'box': Box,
   'circle-play': CirclePlay,
   'clapperboard': Clapperboard,
+  'file': File,
+  'film': Film,
   'folder': Folder,
+  'image': Image,
   'layout-dashboard': LayoutDashboard,
+  'library': Library,
   'megaphone': Megaphone,
   'mic': Mic,
   'music': Music,

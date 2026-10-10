@@ -16,12 +16,13 @@ class CompleteUpload
 
     /**
      * Join the parts into one object and record the file. The hash is checked later (P0 step 7).
+     * A temporary upload (see CreateUpload) returns null: its file is linked once the hash is verified.
      *
      * @param  list<array{number: int, etag: string}>  $parts
      *
      * @throws ValidationException when parts are missing or the size is wrong
      */
-    public function handle(Upload $upload, array $parts): File
+    public function handle(Upload $upload, array $parts): ?File
     {
         return DB::transaction(function () use ($upload, $parts) {
             $upload = Upload::whereKey($upload->id)->lockForUpdate()->firstOrFail();
@@ -50,6 +51,12 @@ class CompleteUpload
 
             if ($this->storage->size($upload->path) !== $upload->size_bytes) {
                 $this->fail('size_bytes', 'The stored file is not the size that was announced.');
+            }
+
+            if ($upload->isTemporary()) {
+                $upload->update(['status' => UploadStatus::Completed]);
+
+                return null;
             }
 
             $file = File::firstOrCreate(

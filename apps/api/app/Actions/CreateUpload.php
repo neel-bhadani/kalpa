@@ -32,13 +32,21 @@ class CreateUpload
         }
 
         $existing = File::where('workspace_id', $workspace->id)->where('sha256', $sha256)->first();
-        if ($existing !== null) {
+
+        // Only hand out an existing file if its bytes are verified or this user uploaded it.
+        // Otherwise anyone who knows a hash could claim the file without having it.
+        if ($existing !== null && ($existing->verified_at !== null || $existing->created_by === $user->id)) {
             return ['upload' => null, 'file' => $existing];
         }
 
-        $path = File::pathFor($workspace->id, $sha256);
+        // An unverified file from someone else: upload to a temporary path. The hash check
+        // (P0 step 7) moves it to the final path once the bytes are proven.
+        $id = (string) Str::uuid7();
+        $path = $existing === null
+            ? File::pathFor($workspace->id, $sha256)
+            : "tmp/{$id}/{$sha256}";
 
-        $upload = Upload::create([
+        $upload = new Upload([
             'workspace_id' => $workspace->id,
             'user_id' => $user->id,
             'file_name' => $fileName,
@@ -51,6 +59,9 @@ class CreateUpload
             'status' => UploadStatus::Pending,
             'expires_at' => now()->addHours(config('uploads.expire_hours')),
         ]);
+        // The id is chosen up front because the temporary path contains it.
+        $upload->id = $id;
+        $upload->save();
 
         return ['upload' => $upload, 'file' => null];
     }

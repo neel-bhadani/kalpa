@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { findModule } from '@kalpa/core'
+import type { EditorTask } from '@kalpa/core'
 import type { Task } from '~/types/api'
 
 const route = useRoute()
@@ -8,7 +9,7 @@ const api = useApi()
 const errors = useFormErrors()
 
 const module = findModule(route.params.module as string)
-const task = ref<Task | null>(null)
+const task = ref<(Task & Pick<EditorTask, 'outputs'>) | null>(null)
 
 // The module's editor, downloaded only now (its own chunk).
 const Editor = module
@@ -16,7 +17,11 @@ const Editor = module
   : null
 
 try {
-  task.value = (await api<{ data: Task }>(`/api/v1/tasks/${route.params.id}`)).data
+  const [taskResponse, outputs] = await Promise.all([
+    api<{ data: Task }>(`/api/v1/tasks/${route.params.id}`),
+    api<{ data: NonNullable<EditorTask['outputs']> }>(`/api/v1/tasks/${route.params.id}/outputs`),
+  ])
+  task.value = { ...taskResponse.data, outputs: outputs.data }
 } catch (error) {
   errors.show(error)
 }

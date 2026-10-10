@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/story.schema.json",
+  "title": "Story",
+  "description": "Spec of a \"story\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "title"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "logline": {
+      "type": "string"
+    },
+    "synopsis": {
+      "type": "string"
+    }
+  }
+}

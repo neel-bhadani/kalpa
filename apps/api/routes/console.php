@@ -11,10 +11,15 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// The module keys, in order, for the web app's registry test (make module-keys).
+// Module keys (in order) and asset kind owners, for the web app's registry test (make module-keys).
 Artisan::command('modules:keys', function () {
-    $this->line(json_encode(array_keys(app(ModuleRegistry::class)->all()), JSON_PRETTY_PRINT));
-})->purpose('Print the installed module keys as JSON');
+    $registry = app(ModuleRegistry::class);
+
+    $this->line(json_encode([
+        'modules' => array_keys($registry->all()),
+        'asset_kinds' => array_map(fn (array $kind) => $kind['owner'], $registry->assetKinds()),
+    ], JSON_PRETTY_PRINT));
+})->purpose('Print the module keys and asset kind owners as JSON');
 
 // Create the storage buckets (app and tests) if missing. Runs when the api container starts.
 Artisan::command('kalpa:storage-setup', function () {

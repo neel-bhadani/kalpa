@@ -180,3 +180,38 @@ it('rejects a disallowed type or an oversized file', function () {
     $start(['file_name' => 'hero.fbx', 'mime' => ''])->assertCreated()->assertJsonPath('data.upload.mime', 'application/octet-stream');
     $start(['file_name' => 'walk.bvh', 'mime' => null, 'sha256' => hash('sha256', 'bvh')])->assertCreated()->assertJsonPath('data.upload.mime', 'text/plain');
 });
+
+it("only dedupes to a file that is verified or the user's own", function () {
+    $ada = owner();
+    $workspace = workspaceOf($ada);
+    $bob = memberOf($workspace, WorkspaceRole::Editor);
+    $bytes = Str::random(900);
+
+    $uploadId = actingIn($ada, $workspace)->postJson('/api/v1/uploads', startUpload($bytes))->json('data.upload.id');
+    $fileId = actingIn($ada, $workspace)->postJson("/api/v1/uploads/{$uploadId}/complete", ['parts' => putParts($uploadId, $bytes)])
+        ->json('data.file.id');
+
+    // Ada uploaded it herself, so she gets it back even though it isn't verified yet.
+    actingIn($ada, $workspace)->postJson('/api/v1/uploads', startUpload($bytes))->assertJsonPath('data.file.id', $fileId);
+
+    // Bob only knows the hash: he has to upload the bytes, to a temporary path, and gets no file yet.
+    $bobUpload = actingIn($bob, $workspace)->postJson('/api/v1/uploads', startUpload($bytes))
+        ->assertCreated()
+        ->assertJsonPath('data.deduplicated', false)
+        ->json('data.upload.id');
+    expect(Upload::find($bobUpload)->path)->toBe('tmp/'.$bobUpload.'/'.hash('sha256', $bytes));
+
+    actingIn($bob, $workspace)->postJson("/api/v1/uploads/{$bobUpload}/complete", ['parts' => putParts($bobUpload, $bytes)])
+        ->assertOk()
+        ->assertJsonPath('data.file', null)
+        ->assertJsonPath('data.pending_verification', true);
+    expect(File::count())->toBe(1)
+        ->and(Upload::find($bobUpload)->status)->toBe(UploadStatus::Completed);
+
+    // Once verified, everyone in the workspace dedupes to it.
+    File::find($fileId)->forceFill(['verified_at' => now()])->save();
+    actingIn($bob, $workspace)->postJson('/api/v1/uploads', startUpload($bytes))
+        ->assertOk()
+        ->assertJsonPath('data.deduplicated', true)
+        ->assertJsonPath('data.file.id', $fileId);
+});

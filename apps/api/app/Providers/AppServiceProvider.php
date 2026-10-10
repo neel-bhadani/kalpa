@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Core\Assets\AssetSchemas;
 use App\Core\Modules\ModuleRegistry;
 use App\Core\Storage\ObjectStorage;
 use App\Core\Workspaces\CurrentWorkspace;
@@ -28,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ModuleRegistry::class, fn () => new ModuleRegistry(config('modules.manifests')));
 
         $this->app->singleton(ObjectStorage::class, fn () => ObjectStorage::fromConfig(config('filesystems.disks.s3')));
+
+        $this->app->singleton(AssetSchemas::class, fn () => new AssetSchemas(config('assets.schemas_path')));
     }
 
     /**

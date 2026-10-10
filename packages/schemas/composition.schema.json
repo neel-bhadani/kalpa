@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/composition.schema.json",
+  "title": "Composition",
+  "description": "Spec of a \"composition\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "title"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "bpm": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "key": {
+      "type": "string"
+    }
+  }
+}

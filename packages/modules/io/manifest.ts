@@ -5,5 +5,7 @@ export default {
   name: 'Import/Export',
   icon: 'arrow-left-right',
   // Loaded only when a io task is opened, so each editor is its own chunk.
+  // Asset kinds this module owns (same as the server manifest).
+  assetKinds: [],
   editor: () => import('./Editor.vue'),
 } satisfies ClientModule

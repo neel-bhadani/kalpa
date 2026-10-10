@@ -36,4 +36,9 @@ class Project extends Model
     {
         return $this->hasOne(ProjectMemory::class);
     }
+
+    public function projectAssets(): HasMany
+    {
+        return $this->hasMany(ProjectAsset::class);
+    }
 }

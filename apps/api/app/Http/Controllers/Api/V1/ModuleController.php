@@ -51,6 +51,9 @@ class ModuleController extends Controller
             'task_kinds' => collect($module->taskKinds())
                 ->map(fn (string $label, string $key) => ['key' => $key, 'label' => $label])
                 ->values(),
+            'asset_kinds' => collect($module->assetKinds())
+                ->map(fn (string $label, string $key) => ['key' => $key, 'label' => $label])
+                ->values(),
             'enabled' => $enabled,
         ];
     }

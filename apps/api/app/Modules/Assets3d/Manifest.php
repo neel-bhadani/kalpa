@@ -33,4 +33,13 @@ class Manifest implements ModuleManifest
             'create_environment' => 'Create environment',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        return [
+            'object3d' => '3D object',
+            'environment' => 'Environment',
+            'material' => 'Material',
+        ];
+    }
 }

@@ -39,6 +39,10 @@ const activeClasses = '!bg-accent/10 !text-text'
           <AppIcon name="folder" />
           <span class="hidden md:inline">Projects</span>
         </NuxtLink>
+        <NuxtLink to="/assets" :class="linkClasses" :active-class="activeClasses" title="Assets">
+          <AppIcon name="library" />
+          <span class="hidden md:inline">Assets</span>
+        </NuxtLink>
         <NuxtLink to="/settings/modules" :class="[linkClasses, $route.path.startsWith('/settings') && activeClasses]" title="Settings">
           <AppIcon name="settings" />
           <span class="hidden md:inline">Settings</span>

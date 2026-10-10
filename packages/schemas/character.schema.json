@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/character.schema.json",
+  "title": "Character",
+  "description": "Spec of a \"character\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "name",
+    "style"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "style": {
+      "enum": [
+        "2d",
+        "3d",
+        "realistic"
+      ]
+    },
+    "description": {
+      "type": "string"
+    }
+  }
+}

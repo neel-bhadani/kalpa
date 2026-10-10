@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CursorPage, Project, Task, TaskEvent, TaskMode, TaskStatus } from '~/types/api'
+import type { CursorPage, Project, ProjectAsset, Task, TaskEvent, TaskMode, TaskStatus } from '~/types/api'
 
 const route = useRoute()
 const api = useApi()
@@ -7,6 +7,7 @@ const errors = useFormErrors()
 const projectId = route.params.id as string
 
 const project = ref<Project | null>(null)
+const projectAssets = ref<ProjectAsset[]>([])
 const tasks = ref<Task[]>([])
 const nextCursor = ref<string | null>(null)
 
@@ -93,6 +94,7 @@ await run(async () => {
   const { data } = await api<{ data: Project }>(`/api/v1/projects/${projectId}/open`, { method: 'POST' })
   project.value = data
   await loadTasks()
+  projectAssets.value = (await api<{ data: ProjectAsset[] }>(`/api/v1/projects/${projectId}/assets`)).data
 })
 </script>
 
@@ -101,6 +103,25 @@ await run(async () => {
     <NuxtLink to="/projects" class="text-sm text-muted hover:text-text">← Projects</NuxtLink>
     <h1 class="mt-2 text-2xl font-semibold">{{ project?.name ?? 'Project' }}</h1>
     <p v-if="project" class="mt-1 text-sm text-muted">{{ project.style }} · {{ project.aspect_ratio }}</p>
+
+    <section class="mt-6">
+      <h2 class="text-sm text-muted">Assets</h2>
+      <ul class="mt-2 flex flex-wrap gap-2">
+        <li v-for="item in projectAssets" :key="item.asset.id">
+          <NuxtLink
+            :to="{ path: '/assets', query: { open: item.asset.id } }"
+            class="flex items-center gap-2 rounded-lg bg-panel px-3 py-1.5 text-sm hover:ring-1 hover:ring-accent/40"
+          >
+            <AppIcon :name="assetKindIcon(item.asset.kind)" :size="14" class="text-muted" />
+            {{ item.asset.name }}
+            <span class="font-mono text-xs text-muted">
+              {{ item.pinned_version ? `v${item.pinned_version.number} pinned` : `v${item.asset.current_version?.number}` }}
+            </span>
+          </NuxtLink>
+        </li>
+        <li v-if="projectAssets.length === 0" class="text-sm text-muted">No assets yet. Add them from the asset library.</li>
+      </ul>
+    </section>
 
     <form class="mt-6 flex flex-wrap items-end gap-3 rounded-xl bg-panel p-4" @submit.prevent="createTask">
       <label class="w-32">

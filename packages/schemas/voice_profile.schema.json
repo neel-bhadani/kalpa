@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/voice_profile.schema.json",
+  "title": "Voice profile",
+  "description": "Spec of a \"voice_profile\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "name",
+    "language"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "language": {
+      "type": "string",
+      "minLength": 2
+    },
+    "engine": {
+      "type": "string"
+    }
+  }
+}

@@ -33,4 +33,11 @@ class Manifest implements ModuleManifest
             'create_song' => 'Create song',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        return [
+            'composition' => 'Composition',
+        ];
+    }
 }

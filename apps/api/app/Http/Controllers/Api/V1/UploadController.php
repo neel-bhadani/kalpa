@@ -80,7 +80,12 @@ class UploadController extends Controller
 
         $file = $completeUpload->handle($upload, $data['parts']);
 
-        return response()->json(['data' => ['file' => new FileResource($file), 'deduplicated' => false]]);
+        // A temporary upload has no file until its hash is verified (P0 step 7).
+        return response()->json(['data' => [
+            'file' => $file ? new FileResource($file) : null,
+            'deduplicated' => false,
+            'pending_verification' => $file === null,
+        ]]);
     }
 
     public function destroy(Upload $upload, AbortUpload $abortUpload): Response

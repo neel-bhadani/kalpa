@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/object3d.schema.json",
+  "title": "3D object",
+  "description": "Spec of a \"object3d\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "format": {
+      "enum": [
+        "glb",
+        "gltf",
+        "fbx",
+        "obj"
+      ]
+    }
+  }
+}

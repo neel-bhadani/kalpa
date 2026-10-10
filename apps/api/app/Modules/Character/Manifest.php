@@ -32,4 +32,13 @@ class Manifest implements ModuleManifest
             'create_character' => 'Create character',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        return [
+            'character' => 'Character',
+            'outfit' => 'Outfit',
+            'motion' => 'Motion',
+        ];
+    }
 }

@@ -36,6 +36,14 @@ class Upload extends Model
     }
 
     /**
+     * Uploaded to tmp/<upload_id>/... and waiting for the hash check before it becomes a file.
+     */
+    public function isTemporary(): bool
+    {
+        return str_starts_with($this->path, 'tmp/');
+    }
+
+    /**
      * Still accepting parts.
      */
     public function isOpen(): bool

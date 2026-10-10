@@ -32,4 +32,12 @@ class Manifest implements ModuleManifest
             'create_ad' => 'Create ad',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        return [
+            'ad' => 'Ad',
+            'brand_kit' => 'Brand kit',
+        ];
+    }
 }

@@ -1,15 +1,20 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AssetController;
+use App\Http\Controllers\Api\V1\AssetLinkController;
+use App\Http\Controllers\Api\V1\AssetVersionController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ModuleController;
+use App\Http\Controllers\Api\V1\ProjectAssetController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectMemoryController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaskDependencyController;
+use App\Http\Controllers\Api\V1\TaskOutputController;
 use App\Http\Controllers\Api\V1\TokenController;
 use App\Http\Controllers\Api\V1\UploadController;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +56,29 @@ Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
         Route::delete('/uploads/{upload}', [UploadController::class, 'destroy']);
 
         Route::get('/files/{file}/url', [FileController::class, 'url']);
+    });
+
+    Route::whereUuid(['asset', 'project', 'task'])->whereNumber('number')->group(function () {
+        Route::get('/assets', [AssetController::class, 'index']);
+        Route::post('/assets', [AssetController::class, 'store']);
+        Route::get('/assets/{asset}', [AssetController::class, 'show']);
+        Route::patch('/assets/{asset}', [AssetController::class, 'update']);
+        Route::delete('/assets/{asset}', [AssetController::class, 'destroy']);
+
+        Route::get('/assets/{asset}/versions', [AssetVersionController::class, 'index']);
+        Route::post('/assets/{asset}/versions', [AssetVersionController::class, 'store']);
+        Route::get('/assets/{asset}/versions/{number}', [AssetVersionController::class, 'show']);
+        Route::post('/assets/{asset}/restore/{number}', [AssetVersionController::class, 'restore']);
+
+        Route::get('/assets/{asset}/links', [AssetLinkController::class, 'index']);
+        Route::post('/assets/{asset}/links', [AssetLinkController::class, 'store']);
+        Route::delete('/assets/{asset}/links', [AssetLinkController::class, 'destroy']);
+
+        Route::get('/projects/{project}/assets', [ProjectAssetController::class, 'index']);
+        Route::post('/projects/{project}/assets', [ProjectAssetController::class, 'store']);
+        Route::delete('/projects/{project}/assets', [ProjectAssetController::class, 'destroy']);
+
+        Route::get('/tasks/{task}/outputs', [TaskOutputController::class, 'index']);
     });
 
     Route::whereUuid(['project', 'task'])->group(function () {

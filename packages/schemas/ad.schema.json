@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/ad.schema.json",
+  "title": "Ad",
+  "description": "Spec of a \"ad\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "title",
+    "duration_s"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "duration_s": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "aspect_ratio": {
+      "enum": [
+        "16:9",
+        "9:16",
+        "1:1",
+        "4:5",
+        "4:3"
+      ]
+    }
+  }
+}

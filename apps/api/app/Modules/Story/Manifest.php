@@ -33,4 +33,12 @@ class Manifest implements ModuleManifest
             'write_script' => 'Write script',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        return [
+            'story' => 'Story',
+            'script' => 'Script',
+        ];
+    }
 }

@@ -19,7 +19,8 @@ export interface UploadApi {
   start(body: { file_name: string; size_bytes: number; mime: string; sha256: string }): Promise<StartResult>
   status(uploadId: string): Promise<{ upload: UploadInfo; parts: StoredPart[] }>
   presign(uploadId: string, partNumbers: number[]): Promise<{ urls: { number: number; url: string }[]; expires_at: string }>
-  complete(uploadId: string, parts: { number: number; etag: string }[]): Promise<{ file: UploadedFile }>
+  // file is null when the upload waits for its hash check (an unverified copy from someone else exists).
+  complete(uploadId: string, parts: { number: number; etag: string }[]): Promise<{ file: UploadedFile | null; pending_verification?: boolean }>
   abort(uploadId: string): Promise<void>
 }
 
@@ -33,6 +34,8 @@ export type UploadState = {
   resumedParts: number
   partCount: number
   deduplicated: boolean
+  // Uploaded, but the file appears only after the server has checked its hash.
+  pendingVerification: boolean
   file?: UploadedFile
   error?: string
 }
@@ -55,6 +58,7 @@ class AbortedError extends Error {
 export class FileUpload {
   readonly state: UploadState = {
     phase: 'hashing', hashedPercent: 0, uploadedPercent: 0, resumedParts: 0, partCount: 0, deduplicated: false,
+    pendingVerification: false,
   }
 
   private sha256 = ''
@@ -195,7 +199,7 @@ export class FileUpload {
     const parts = [...this.etags].sort(([a], [b]) => a - b).map(([number, etag]) => ({ number, etag }))
     const { file } = await this.api.complete(this.uploadId, parts)
     await forgetResume(this.key()).catch(() => undefined)
-    this.update({ phase: 'done', uploadedPercent: 100, file })
+    this.update({ phase: 'done', uploadedPercent: 100, file: file ?? undefined, pendingVerification: file === null })
   }
 
   // Takes parts off the queue until it's empty, or the upload is paused or cancelled.

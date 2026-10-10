@@ -18,7 +18,7 @@ export function useUploadApi(): UploadApi {
       )).data
     },
     async complete(uploadId, parts) {
-      return (await api<{ data: { file: UploadedFile } }>(`/api/v1/uploads/${uploadId}/complete`, {
+      return (await api<{ data: { file: UploadedFile | null; pending_verification: boolean } }>(`/api/v1/uploads/${uploadId}/complete`, {
         method: 'POST',
         body: { parts },
       })).data

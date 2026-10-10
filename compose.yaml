@@ -53,9 +53,9 @@ services:
     environment:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-kalpa}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-kalpa-secret}
-      # Keep SeaweedFS inside 256m: Go's heap target here, and the buffer caps on the command above
+      # Keep SeaweedFS inside its limit: Go's heap target here, and the buffer caps on the command above
       # (their defaults are unlimited; it was OOM-killed on 600 MB uploads and downloads without them).
-      GOMEMLIMIT: 160MiB
+      GOMEMLIMIT: 256MiB
     volumes:
       - seaweedfs-data:/data
     healthcheck:
@@ -64,7 +64,7 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 20
-    mem_limit: 256m
+    mem_limit: 384m
     restart: unless-stopped
 
   api:
@@ -80,6 +80,8 @@ services:
     command: ["sh", "-c", "[ -d vendor ] || composer install; php artisan kalpa:storage-setup || echo 'storage setup failed'; exec frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile"]
     volumes:
       - ./apps/api:/app
+      # Asset kind JSON Schemas, shared with the web app.
+      - ./packages/schemas:/schemas:ro
     depends_on:
       postgres:
         condition: service_healthy

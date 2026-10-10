@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/file.schema.json",
+  "title": "File",
+  "description": "Spec of a \"file\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "mime"
+  ],
+  "properties": {
+    "mime": {
+      "type": "string",
+      "minLength": 1
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "file_name": {
+      "type": "string"
+    }
+  }
+}

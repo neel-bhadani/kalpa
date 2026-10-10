@@ -25,4 +25,12 @@ interface ModuleManifest
      * @return array<string, string>
      */
     public function taskKinds(): array;
+
+    /**
+     * Asset kinds this module owns: key => label. Each kind has a JSON Schema at
+     * packages/schemas/<kind>.schema.json. A kind belongs to exactly one module (or the core).
+     *
+     * @return array<string, string>
+     */
+    public function assetKinds(): array;
 }

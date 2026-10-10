@@ -51,4 +51,9 @@ class Task extends Model
     {
         return $this->hasMany(TaskEvent::class);
     }
+
+    public function outputs(): HasMany
+    {
+        return $this->hasMany(TaskOutput::class);
+    }
 }

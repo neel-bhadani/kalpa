@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { findModule, modules } from './modules'
+import { assetKindOwners, findModule, modules } from './modules'
 // Written by `make module-keys` from the API's module registry (php artisan modules:keys).
-import serverKeys from './module-keys.json'
+import server from './module-keys.json'
 
 describe('client module registry', () => {
   it('has the same modules as the server, in the same order', () => {
-    expect(modules.map(module => module.key)).toEqual(serverKeys)
+    expect(modules.map(module => module.key)).toEqual(server.modules)
+  })
+
+  it('gives every asset kind the same owner as the server', () => {
+    expect(assetKindOwners()).toEqual(server.asset_kinds)
+  })
+
+  it('never lets two modules claim the same asset kind', () => {
+    const claimed = modules.flatMap(module => module.assetKinds)
+    expect(new Set(claimed).size).toBe(claimed.length)
   })
 
   it('gives every module a name, an icon and a lazy editor', () => {

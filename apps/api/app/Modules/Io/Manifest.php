@@ -33,4 +33,10 @@ class Manifest implements ModuleManifest
             'export_files' => 'Export files',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        // Works with other modules' assets; owns no kind of its own.
+        return [];
+    }
 }

@@ -33,4 +33,11 @@ class Manifest implements ModuleManifest
             'record_dialogue' => 'Record dialogue',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        return [
+            'voice_profile' => 'Voice profile',
+        ];
+    }
 }

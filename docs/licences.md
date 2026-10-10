@@ -10,3 +10,4 @@ Every model, asset, dataset and third-party library chosen for Kalpa Studio (fra
 | league/flysystem-aws-s3-v3 | PHP library (S3 filesystem adapter) | 3.35 | MIT | Yes | https://github.com/thephpleague/flysystem-aws-s3-v3 | API: s3 disk |
 | aws/aws-sdk-php | PHP library (S3 client; brought by the adapter, with aws/aws-crt-php Apache-2.0 and mtdowling/jmespath.php MIT) | 3.400 | Apache-2.0 | Yes | https://github.com/aws/aws-sdk-php | API: multipart uploads, presigned URLs |
 | hash-wasm | JS library (SHA-256 in WebAssembly) | 4.12 | MIT | Yes | https://github.com/Daninet/hash-wasm | Web: hashing files in a Web Worker before upload |
+| opis/json-schema | PHP library (JSON Schema validation, draft 2020-12; brings opis/string and opis/uri, both Apache-2.0) | 2.6 | Apache-2.0 | Yes | https://github.com/opis/json-schema | API: validating asset specs against packages/schemas |

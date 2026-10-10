@@ -1,11 +1,32 @@
-[
-    "story",
-    "character",
-    "assets3d",
-    "voice",
-    "music",
-    "video",
-    "ads",
-    "player",
-    "io"
-]
+{
+    "modules": [
+        "story",
+        "character",
+        "assets3d",
+        "voice",
+        "music",
+        "video",
+        "ads",
+        "player",
+        "io"
+    ],
+    "asset_kinds": {
+        "image": "core",
+        "audio": "core",
+        "video": "core",
+        "file": "core",
+        "story": "story",
+        "script": "story",
+        "character": "character",
+        "outfit": "character",
+        "motion": "character",
+        "object3d": "assets3d",
+        "environment": "assets3d",
+        "material": "assets3d",
+        "voice_profile": "voice",
+        "composition": "music",
+        "timeline": "video",
+        "ad": "ads",
+        "brand_kit": "ads"
+    }
+}

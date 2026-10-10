@@ -34,4 +34,11 @@ class Manifest implements ModuleManifest
             'upscale_video' => 'Upscale video',
         ];
     }
+
+    public function assetKinds(): array
+    {
+        return [
+            'timeline' => 'Timeline',
+        ];
+    }
 }
