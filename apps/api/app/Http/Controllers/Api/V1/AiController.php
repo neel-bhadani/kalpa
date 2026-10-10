@@ -8,6 +8,7 @@ use App\Actions\ChangeAiStepStatus;
 use App\Actions\CreateProducerPlan;
 use App\Actions\StartAiSession;
 use App\Actions\UpdateAiSession;
+use App\Core\DevTools;
 use App\Enums\AiRole;
 use App\Enums\AiSessionStatus;
 use App\Enums\AiStepStatus;
@@ -166,6 +167,8 @@ class AiController extends Controller
      */
     public function plan(Request $request, Project $project, CreateProducerPlan $createPlan): JsonResponse
     {
+        // The demo plan only exists in development until the real Producer arrives (P1).
+        abort_unless(DevTools::enabled(), 404);
         Gate::authorize('update', $project);
 
         $data = $request->validate(['goal' => ['required', 'string', 'max:200']]);

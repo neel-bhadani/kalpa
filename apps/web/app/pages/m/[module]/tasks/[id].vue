@@ -109,7 +109,14 @@ watch(() => sync.status.conflicts.some(conflict => conflict.entity_id === taskId
   if (wasOpen && !open) void checkpoint.load()
 })
 
-const isDev = import.meta.dev
+const isDev = computed(() => useAuthStore().devTools)
+// Viewers can look (and switch tabs on this screen) but nothing they do is saved or sent.
+const canEdit = computed(() => useAuthStore().currentWorkspace?.role !== 'viewer')
+
+function onEditorChange(next: Record<string, any>) {
+  if (canEdit.value) void checkpoint.save(next)
+  else checkpoint.checkpoint.value = next
+}
 
 try {
   await loadTask()
@@ -134,7 +141,7 @@ try {
         <span v-if="offline" class="text-xs text-amber-300">Offline copy</span>
         <span v-else-if="checkpoint.source.value === 'local'" class="text-xs text-muted">Resumed from this device's unsent edits</span>
         <button
-          v-if="isDev && !offline"
+          v-if="isDev && canEdit && !offline"
           class="ml-auto rounded-lg border border-muted/30 px-3 py-1.5 text-xs hover:border-accent hover:text-accent"
           data-test="run-demo-job"
           @click="runDemoJob"
@@ -143,7 +150,7 @@ try {
         </button>
         <button
           class="rounded-lg border border-muted/30 px-3 py-1.5 text-xs hover:border-accent hover:text-accent"
-          :class="!(isDev && !offline) && 'ml-auto'"
+          :class="!(isDev && canEdit && !offline) && 'ml-auto'"
           data-test="toggle-assistant"
           @click="showAssistant = !showAssistant"
         >
@@ -167,7 +174,8 @@ try {
             :task="task"
             :checkpoint="checkpoint.checkpoint.value"
             :highlight="highlight"
-            @update:checkpoint="checkpoint.save"
+            :readonly="!canEdit"
+            @update:checkpoint="onEditorChange"
           />
         </div>
         <AssistantPanel

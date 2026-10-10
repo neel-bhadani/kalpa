@@ -82,7 +82,9 @@ Services are prefixed `kalpa-`. Local URL: `http://localhost:8089`.
 
 ## Phases
 
-P0 Core platform (current) → P1 Story & Script + AI runtime → P2 Character → P3 Voice + local worker → P4 3D Assets + Import/Export → P5 Music → P6 Video + Player → P7 CGI & VFX → P8 Ads → P9 Desktop → P10 Mobile.
+Current phase: P1. Architecture overview: docs/architecture.md.
+
+P0 Core platform (done) → P1 Story & Script + AI runtime (current) → P2 Character → P3 Voice + local worker → P4 3D Assets + Import/Export → P5 Music → P6 Video + Player → P7 CGI & VFX → P8 Ads → P9 Desktop → P10 Mobile.
 
 ### P0 steps
 

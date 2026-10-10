@@ -11,7 +11,7 @@ cp .env.example .env                  # set UID/GID to `id -u` / `id -g` if not 
 cp apps/api/.env.example apps/api/.env
 make up                               # first start installs composer and npm packages
 docker compose exec api php artisan key:generate
-docker compose exec api php artisan migrate
+docker compose exec api php artisan migrate --seed   # seed: model registry and a test user
 make test
 ```
 
@@ -37,6 +37,7 @@ The page shows green or red for app, db and redis. API health: `GET /api/v1/heal
 | `make web-preview` / `make web-dev` | Serve a built app (works offline after the first visit) / back to the dev server |
 | `make typecheck` | Type-check the web app and the packages it imports |
 | `make fresh` | `migrate:fresh` on the dev database |
+| `make e2e` | Browser tests (Playwright, `kalpa-e2e`): builds and serves the web app, makes test users, runs `e2e/tests`, then goes back to the dev server |
 
 ## Offline and sync
 
@@ -44,3 +45,17 @@ Tasks, projects and asset metadata are cached per device in IndexedDB, and edits
 (header pill: Synced / Syncing / Offline). To try a second device on this machine, open
 http://127.0.0.1:8089 next to http://localhost:8089: different origins keep separate storage.
 Offline reloads need the built app (`make web-preview`); the dev server can't work offline.
+
+## End-to-end tests
+
+`make e2e` runs the Playwright tests in `e2e/tests` against the running stack (`make up` first). The
+`kalpa-e2e` service is in the `e2e` compose profile, so `make up` never starts it. Each test uses two
+browser contexts as two devices. `php artisan e2e:fixtures` (local only) makes an owner, a viewer in the
+owner's workspace and a user in another workspace, with a random password written to
+`e2e/.fixtures.json` (git-ignored).
+
+## Dev tools
+
+The fake brain (assistant "demo"), the `demo.count` job, "Run demo job" and "Plan with Producer (demo)"
+exist only when `APP_ENV=local` (and in tests). Elsewhere the API hides or refuses them, and `/api/v1/me`
+reports `features.dev_tools: false`, so the web app hides their buttons.

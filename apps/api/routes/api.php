@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', HealthController::class);
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('/tokens', [TokenController::class, 'store'])->middleware('throttle:login');
 
@@ -84,9 +84,9 @@ Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
         Route::post('/projects/{project}/plans', [AiController::class, 'plan']);
     });
 
-    Route::get('/sync', [SyncController::class, 'pull']);
-    Route::post('/sync', [SyncController::class, 'push']);
-    Route::post('/sync/unsynced', [SyncController::class, 'unsynced']);
+    Route::get('/sync', [SyncController::class, 'pull'])->middleware('throttle:sync');
+    Route::post('/sync', [SyncController::class, 'push'])->middleware('throttle:sync');
+    Route::post('/sync/unsynced', [SyncController::class, 'unsynced'])->middleware('throttle:sync');
 
     Route::whereUuid(['job', 'worker'])->group(function () {
         Route::get('/jobs', [JobController::class, 'index']);

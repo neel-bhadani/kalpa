@@ -19,8 +19,8 @@ const input = ref('')
 const thinking = ref<string | null>(null)
 const stepError = ref('')
 const canAct = computed(() => auth.currentWorkspace?.role !== 'viewer')
-// No real models until P1: the scripted fake brain, in development only.
-const brain = import.meta.dev ? new FakeBrain() : null
+// No real models until P1: the scripted fake brain, in development only (APP_ENV=local).
+const brain = auth.devTools ? new FakeBrain() : null
 
 const steps = computed(() => [...(session.value?.steps ?? [])].sort((a, b) => a.seq - b.seq))
 

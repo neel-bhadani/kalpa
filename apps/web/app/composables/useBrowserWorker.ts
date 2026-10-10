@@ -6,8 +6,10 @@ import { clientId } from '~/stores/devices'
 let worker: BrowserWorker | null = null
 let stopListening: (() => void) | null = null
 
-// Job types this browser can run. demo.count only exists in development.
-const handlers: Record<string, JobHandler> = import.meta.dev ? { 'demo.count': demoCount } : {}
+// Job types this browser can run. demo.count only exists in development (APP_ENV=local).
+function handlers(devTools: boolean): Record<string, JobHandler> {
+  return devTools ? { 'demo.count': demoCount } : {}
+}
 
 export function useBrowserWorker() {
   async function start() {
@@ -35,7 +37,7 @@ export function useBrowserWorker() {
 
     worker = new BrowserWorker({
       api: workerApi,
-      handlers,
+      handlers: handlers(auth.devTools),
       capabilities,
       onError: error => console.warn('[kalpa worker]', error),
     })

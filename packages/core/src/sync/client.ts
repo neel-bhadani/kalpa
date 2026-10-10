@@ -103,7 +103,9 @@ export type SyncClientOptions = {
   onRejected?: (op: Op, result: OpResult) => void
 }
 
-type OutboxRecord = Op & { seq?: number; created_at: string }
+// sent: the op has been handed to the network at least once, so the server may already have
+// applied it (even if no reply came back). Such an entry is never merged into or changed.
+type OutboxRecord = Op & { seq?: number; created_at: string; sent?: boolean }
 
 interface SyncDb extends DBSchema {
   entities: { key: string; value: EntityRecord; indexes: { type: string } }
@@ -335,12 +337,16 @@ export class SyncClient {
   async enqueue(op: Omit<Op, 'op_id'>): Promise<void> {
     const tx = this.db.transaction('outbox', 'readwrite')
 
-    // A newer checkpoint replaces one that hasn't been sent yet: only the latest matters.
+    // A newer checkpoint replaces one that was never sent: only the latest matters. An op that was
+    // sent may already be applied on the server with its reply lost (tab closed, connection dropped),
+    // so it stays as it is and the new edit queues after it; once the old op's result arrives, the
+    // new one moves onto the version it made. A replacement also gets a new op_id, so it can never
+    // be mistaken for the op it replaced.
     let merged = false
     if (op.type === 'task.checkpoint') {
       for (const queued of await tx.store.getAll()) {
-        if (queued.type === op.type && queued.entity_id === op.entity_id && !this.inFlight.has(queued.seq!)) {
-          await tx.store.put({ ...queued, payload: op.payload })
+        if (queued.type === op.type && queued.entity_id === op.entity_id && !queued.sent && !this.inFlight.has(queued.seq!)) {
+          await tx.store.put({ ...queued, payload: op.payload, op_id: crypto.randomUUID(), created_at: new Date().toISOString() })
           merged = true
           break
         }
@@ -381,6 +387,13 @@ export class SyncClient {
         }).slice(0, MAX_BATCH)
 
         batch.forEach(op => this.inFlight.add(op.seq!))
+        // Mark them sent before the request goes out (see OutboxRecord.sent).
+        const mark = this.db.transaction('outbox', 'readwrite')
+        for (const op of batch) {
+          const current = await mark.store.get(op.seq!)
+          if (current?.op_id === op.op_id && !current.sent) await mark.store.put({ ...current, sent: true })
+        }
+        await mark.done
         let results: OpResult[]
         try {
           results = await this.options.api.push(this.deviceId, batch.map(({ op_id, type, entity_id, base_row_version, payload }) => (
@@ -426,7 +439,10 @@ export class SyncClient {
     const entities = tx.objectStore('entities')
     const meta = tx.objectStore('meta')
 
-    await outbox.delete(op.seq!)
+    // Remove only the exact op this reply is for. If the entry was replaced meanwhile (newer edit,
+    // new op_id), it stays and is sent next.
+    const current = await outbox.get(op.seq!)
+    if (current?.op_id === op.op_id) await outbox.delete(op.seq!)
     const record = await entities.get(key)
 
     if (result.status === 'applied') {

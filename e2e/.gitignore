@@ -1,0 +1,5 @@
+node_modules/
+test-results/
+playwright-report/
+# Written by make e2e (users with a random password for this run).
+.fixtures.json

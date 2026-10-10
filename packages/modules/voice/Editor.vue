@@ -5,7 +5,7 @@ import PlaceholderEditor from '../../ui/src/PlaceholderEditor.vue'
 
 // Every editor gets the task, its checkpoint and what an assistant step just changed (highlight),
 // and emits changes to the checkpoint.
-defineProps<{ task: EditorTask; checkpoint: Checkpoint; highlight?: EditorHighlight }>()
+defineProps<{ task: EditorTask; checkpoint: Checkpoint; highlight?: EditorHighlight; readonly?: boolean }>()
 const emit = defineEmits<{ 'update:checkpoint': [checkpoint: Checkpoint] }>()
 </script>
 
@@ -15,6 +15,7 @@ const emit = defineEmits<{ 'update:checkpoint': [checkpoint: Checkpoint] }>()
     :task="task"
     :checkpoint="checkpoint"
     :highlight="highlight"
+    :readonly="readonly"
     @update:checkpoint="emit('update:checkpoint', $event)"
   />
 </template>

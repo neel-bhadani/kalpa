@@ -1,13 +1,19 @@
 <?php
 
+use App\Actions\CreateProject;
+use App\Actions\CreateTask;
 use App\Actions\ExpireStaleUploads;
 use App\Actions\MarkStaleWorkersOffline;
+use App\Actions\RegisterUser;
 use App\Actions\RequeueExpiredJobs;
 use App\Core\Modules\ModuleRegistry;
 use App\Core\Storage\ObjectStorage;
+use App\Enums\WorkspaceRole;
+use App\Models\WorkspaceMember;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Str;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -51,3 +57,32 @@ Artisan::command('workers:mark-offline', function () {
 
 Schedule::command('jobs:requeue-expired')->everyMinute();
 Schedule::command('workers:mark-offline')->everyMinute();
+
+// Users for the browser end-to-end tests (make e2e), with a fresh random password each run:
+// an owner with a project and task, a viewer in the owner's workspace, and a stranger.
+// Local only; printed as JSON for e2e/.fixtures.json.
+Artisan::command('e2e:fixtures', function () {
+    abort_unless(app()->environment('local'), 403, 'e2e:fixtures only runs locally.');
+
+    $run = Str::lower(Str::random(6));
+    $password = Str::random(20);
+    $register = app(RegisterUser::class);
+
+    $owner = $register->handle('E2E Owner', "e2e-owner-{$run}@example.test", $password);
+    $viewer = $register->handle('E2E Viewer', "e2e-viewer-{$run}@example.test", $password);
+    $stranger = $register->handle('E2E Stranger', "e2e-stranger-{$run}@example.test", $password);
+    $workspace = $owner->workspaces()->first();
+
+    WorkspaceMember::create(['workspace_id' => $workspace->id, 'user_id' => $viewer->id, 'role' => WorkspaceRole::Viewer]);
+
+    $project = app(CreateProject::class)->handle($workspace, $owner, ['name' => "E2E project {$run}"]);
+    $task = app(CreateTask::class)->handle($project, $owner, ['module' => 'story', 'kind' => 'write_script', 'title' => "E2E fixture task {$run}"]);
+
+    $this->line(json_encode([
+        'password' => $password,
+        'owner' => $owner->email,
+        'viewer' => $viewer->email,
+        'stranger' => $stranger->email,
+        'task' => ['id' => $task->id, 'module' => $task->module, 'title' => $task->title],
+    ], JSON_PRETTY_PRINT));
+})->purpose('Create users for the e2e tests (local only)');

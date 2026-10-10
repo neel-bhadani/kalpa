@@ -2,6 +2,7 @@
 
 namespace App\Core\Jobs;
 
+use App\Core\DevTools;
 use App\Core\Jobs\Handlers\MakeThumbnail;
 use App\Core\Jobs\Handlers\VerifyFileHash;
 use App\Core\Modules\ModuleRegistry;
@@ -40,7 +41,7 @@ class JobTypeRegistry
             }
         }
 
-        if (! app()->environment('local', 'testing')) {
+        if (! DevTools::enabled()) {
             $this->types = array_filter($this->types, fn (array $type) => ! ($type['dev_only'] ?? false));
         }
     }

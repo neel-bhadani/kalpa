@@ -63,8 +63,14 @@ function setup(mode: Mode, brain: Brain = new FakeBrain({ chunkDelayMs: 0 })) {
 }
 
 describe('AssistantRunner with FakeBrain', () => {
-  it('Auto: runs the three steps at once, in order', async () => {
+  it('Auto: runs the three steps at once, in order, one at a time', async () => {
     const { runner, server, changes, checkpoint } = setup('auto')
+    // Each step is created only after the one before has finished (only the current one is running).
+    const addStep = server.api.addStep
+    server.api.addStep = async (step) => {
+      expect([...server.steps.values()].every(existing => existing.status !== 'running')).toBe(true)
+      return addStep(step)
+    }
 
     const steps = await runner.send('show me a demo')
 

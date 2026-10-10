@@ -64,6 +64,12 @@ class AppServiceProvider extends ServiceProvider
         // Only workspace owners turn modules on or off.
         Gate::define('manage-modules', fn () => $this->app->make(CurrentWorkspace::class)->isOwner());
 
+        // Creating accounts: 10 a minute per IP.
+        RateLimiter::for('register', fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
+
+        // Sync: a device pulls and pushes often, but not this often (per user).
+        RateLimiter::for('sync', fn (Request $request) => Limit::perMinute(240)->by((string) $request->user()?->id));
+
         // Guessing pairing codes: 10 tries a minute per IP.
         RateLimiter::for('pairing', fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
 

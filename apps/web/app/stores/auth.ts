@@ -15,7 +15,7 @@ export type Workspace = {
   role: 'owner' | 'editor' | 'viewer'
 }
 
-type Profile = { user: User; workspaces: Workspace[] }
+type Profile = { user: User; workspaces: Workspace[]; features?: { dev_tools?: boolean } }
 
 // The last profile from /me, so the app still opens offline.
 const PROFILE_KEY = 'kalpa.profile'
@@ -25,6 +25,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const user = ref<User | null>(null)
   const workspaces = ref<Workspace[]>([])
+  // Development helpers (demo buttons, the fake brain): only when the API runs with APP_ENV=local.
+  const devTools = ref(false)
   // True once we've asked the API who is signed in.
   const checked = ref(false)
 
@@ -34,6 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
   function setProfile(profile: Profile | null) {
     user.value = profile?.user ?? null
     workspaces.value = profile?.workspaces ?? []
+    devTools.value = profile?.features?.dev_tools ?? false
 
     // Signed in (app start, login or register): check this device in, in the background.
     if (user.value) {
@@ -83,5 +86,5 @@ export const useAuthStore = defineStore('auth', () => {
     useRealtime().disconnect()
   }
 
-  return { user, workspaces, currentWorkspace, checked, fetchMe, register, login, logout }
+  return { user, workspaces, currentWorkspace, devTools, checked, fetchMe, register, login, logout }
 })

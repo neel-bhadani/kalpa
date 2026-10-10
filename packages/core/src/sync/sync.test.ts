@@ -53,7 +53,7 @@ function client(api: SyncApi, network = onlineNetwork()) {
 
 // Let the client's async work (IndexedDB, push loops) run to the end.
 async function settle() {
-  for (let i = 0; i < 20; i++) await new Promise(resolve => setImmediate(resolve))
+  for (let i = 0; i < 40; i++) await new Promise(resolve => setImmediate(resolve))
 }
 
 beforeEach(() => vi.useFakeTimers(fakeTimers))

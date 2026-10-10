@@ -107,18 +107,22 @@ export class AssistantRunner {
       onEvent?.({ type: 'reply', text: reply })
 
       const mode = this.options.mode()
-      const initial: StepStatus = mode === 'auto' ? 'running' : mode === 'semi' ? 'awaiting_review' : 'planned'
       const steps: Step[] = []
-      for (const call of calls) {
-        steps.push(await this.track(await api.addStep({ title: describe(call), tool: call.name, args: call.args, status: initial })))
-      }
 
       if (mode === 'auto') {
-        for (const [i, step] of steps.entries()) {
+        // One at a time: each step is created and run before the next one appears.
+        for (const [i, call] of calls.entries()) {
           if (controller.signal.aborted) break
           if (i > 0 && this.options.stepDelayMs) await new Promise(resolve => setTimeout(resolve, this.options.stepDelayMs))
-          steps[i] = await this.run(step)
+          const step = await this.track(await api.addStep({ title: describe(call), tool: call.name, args: call.args, status: 'running' }))
+          steps.push(await this.run(step))
         }
+        return steps
+      }
+
+      const initial: StepStatus = mode === 'semi' ? 'awaiting_review' : 'planned'
+      for (const call of calls) {
+        steps.push(await this.track(await api.addStep({ title: describe(call), tool: call.name, args: call.args, status: initial })))
       }
 
       return steps

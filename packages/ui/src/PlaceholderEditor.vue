@@ -8,7 +8,7 @@ import { placeholderCommands } from './placeholder-commands'
 // checkpoint, so resuming on another device can be tried: notes (data) plus which tab is open
 // and how far the details are scrolled (view). Its tab buttons and typing go through the same
 // commands an assistant uses (placeholder-commands.ts); `highlight` shows an assistant's step happening.
-const props = defineProps<{ moduleName: string; task: EditorTask; checkpoint: Checkpoint; highlight?: EditorHighlight }>()
+const props = defineProps<{ moduleName: string; task: EditorTask; checkpoint: Checkpoint; highlight?: EditorHighlight; readonly?: boolean }>()
 const emit = defineEmits<{ 'update:checkpoint': [checkpoint: Checkpoint] }>()
 
 type Tab = 'notes' | 'details'
@@ -124,8 +124,10 @@ const shotList = Array.from({ length: 40 }, (_, i) => `Shot ${i + 1}: placeholde
         class="w-full rounded-lg border bg-bg p-3 text-sm outline-none transition-colors focus:border-accent"
         :class="added ? 'border-accent shadow-[0_0_0_3px_rgba(139,124,255,0.25)]' : 'border-muted/30'"
         data-test="notes"
+        :readonly="readonly"
         @input="onNotesInput"
       />
+      <p v-if="readonly" class="mt-2 text-xs text-muted" data-test="read-only">Read only: you can view this task but not change it.</p>
       <p v-if="added" class="mt-2 text-xs text-accent" data-test="added">✦ Added by the assistant: {{ added }}</p>
     </div>
 

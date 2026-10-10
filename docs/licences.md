@@ -19,6 +19,8 @@ Every model, asset, dataset and third-party library chosen for Kalpa Studio (fra
 | idb | JS library (promise wrapper for IndexedDB) | 8.0 | ISC | Yes | https://github.com/jakearchibald/idb | Web: offline cache and outbox (packages/core/src/sync) |
 | fake-indexeddb | JS library (IndexedDB for tests; dev only) | 6.2 | Apache-2.0 | Yes | https://github.com/dumbmatter/fakeIndexedDB | Vitest: sync tests |
 | @vite-pwa/nuxt | JS library (service worker / offline app shell; brings vite-plugin-pwa and Workbox, both MIT; build time only) | 1.1 | MIT | Yes | https://github.com/vite-pwa/nuxt | Web: offline app shell |
+| fast-check | JS library (property-based tests; dev only) | 4.10 | MIT | Yes | https://github.com/dubzzz/fast-check | Vitest: outbox safety property |
+| @playwright/test + mcr.microsoft.com/playwright | JS library and Docker image (browser e2e tests; dev only; image bundles Chromium, BSD-3-Clause) | 1.64 | Apache-2.0 | Yes | https://github.com/microsoft/playwright | kalpa-e2e: make e2e |
 
 ## Models
 

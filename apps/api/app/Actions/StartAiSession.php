@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Core\DevTools;
 use App\Core\Sync\ChangeRecorder;
 use App\Enums\AiAssistant;
 use App\Enums\AiSessionStatus;
@@ -27,7 +28,8 @@ class StartAiSession
     public function handle(Task $task, User $user, ?TaskMode $mode = null, string $brain = 'fake-brain'): AiSession
     {
         $model = RegisteredModel::where('key', $brain)->first();
-        if ($model === null || ! $model->enabled || $model->capability !== ModelCapability::Llm) {
+        $devOnly = config("models.{$brain}.dev_only", false) && ! DevTools::enabled();
+        if ($model === null || $devOnly || ! $model->enabled || $model->capability !== ModelCapability::Llm) {
             throw ValidationException::withMessages(['brain_model_key' => "\"{$brain}\" is not an enabled language model."]);
         }
 

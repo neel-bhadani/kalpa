@@ -210,6 +210,24 @@ services:
     mem_limit: 128m
     restart: unless-stopped
 
+  # End-to-end tests (Playwright, Apache-2.0). Only for make e2e: the e2e profile keeps it out of
+  # make up. Host networking, so the browser opens http://localhost:8089 like a person would.
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
+    container_name: kalpa-e2e
+    profiles: [e2e]
+    user: "${UID:-1000}:${GID:-1000}"
+    network_mode: host
+    ipc: host
+    working_dir: /e2e
+    command: sh -c "[ -d node_modules ] || npm ci; exec npx playwright test"
+    environment:
+      HOME: /tmp
+      CI: 1
+    volumes:
+      - ./e2e:/e2e
+    mem_limit: 1536m
+
 volumes:
   postgres-data:
   redis-data:

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Core\DevTools;
 use App\Models\RegisteredModel;
 use Illuminate\Database\Seeder;
 
@@ -14,7 +15,10 @@ class ModelRegistrySeeder extends Seeder
     public function run(): void
     {
         foreach (config('models') as $key => $model) {
-            if (($model['dev_only'] ?? false) && ! app()->environment('local', 'testing')) {
+            if (($model['dev_only'] ?? false) && ! DevTools::enabled()) {
+                // Never left behind outside development, even if an earlier seed added it.
+                RegisteredModel::where('key', $key)->delete();
+
                 continue;
             }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\LoginUser;
 use App\Actions\LogoutUser;
 use App\Actions\RegisterUser;
+use App\Core\DevTools;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -73,6 +74,8 @@ class AuthController extends Controller
                 'locale' => $user->locale,
                 'settings' => (object) $user->settings,
             ],
+            // Development helpers (demo buttons, the fake brain) are shown only when this is true.
+            'features' => ['dev_tools' => DevTools::enabled()],
             'workspaces' => $workspaces->map(fn ($workspace) => [
                 'id' => $workspace->id,
                 'name' => $workspace->name,

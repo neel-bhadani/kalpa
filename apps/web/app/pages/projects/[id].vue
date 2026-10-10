@@ -8,6 +8,7 @@ const projectId = route.params.id as string
 
 const project = ref<Project | null>(null)
 const projectAssets = ref<ProjectAsset[]>([])
+const auth = useAuthStore()
 
 // The Producer (fake brain for now) plans a goal into three linked tasks; nothing runs yet.
 const goal = ref('')
@@ -122,7 +123,7 @@ await run(async () => {
     <NuxtLink to="/projects" class="text-sm text-muted hover:text-text">← Projects</NuxtLink>
     <h1 class="mt-2 text-2xl font-semibold">{{ project?.name ?? 'Project' }}</h1>
 
-    <form class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-panel p-3" @submit.prevent="planWithProducer">
+    <form v-if="auth.devTools" class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-panel p-3" @submit.prevent="planWithProducer">
       <span class="text-sm text-accent">Producer</span>
       <input v-model="goal" placeholder="Goal, e.g. a one-minute night market short" class="field !mt-0 min-w-64 flex-1" aria-label="Goal">
       <button :disabled="planning || !goal.trim()" class="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-bg disabled:opacity-50" data-test="plan">
