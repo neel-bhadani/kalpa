@@ -13,7 +13,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import { backoffDelay } from '../upload/retry'
 
-export type EntityType = 'project' | 'task' | 'asset' | 'asset_version' | 'project_memory' | 'project_asset' | 'task_output'
+export type EntityType = 'project' | 'task' | 'asset' | 'asset_version' | 'project_memory' | 'project_asset' | 'task_output' | 'ai_session' | 'ai_step'
 export type OpType = 'task.checkpoint' | 'task.update' | 'project_memory.patch'
 
 export type Change = {

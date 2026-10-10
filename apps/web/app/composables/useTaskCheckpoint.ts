@@ -22,8 +22,10 @@ export function useTaskCheckpoint(taskId: string) {
   }
 
   async function save(next: Checkpoint) {
-    checkpoint.value = next
-    await tracker?.update(next)
+    // A plain copy: Vue's reactive proxies can't be stored in IndexedDB.
+    const plain = JSON.parse(JSON.stringify(next)) as Checkpoint
+    checkpoint.value = plain
+    await tracker?.update(plain)
   }
 
   function flush() {

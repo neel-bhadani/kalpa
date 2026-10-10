@@ -3,11 +3,15 @@
 namespace App\Core\Sync;
 
 use App\Enums\SyncEntity;
+use App\Http\Resources\AiSessionResource;
+use App\Http\Resources\AiStepResource;
 use App\Http\Resources\AssetResource;
 use App\Http\Resources\AssetVersionResource;
 use App\Http\Resources\ProjectMemoryResource;
 use App\Http\Resources\ProjectResource;
 use App\Http\Resources\TaskResource;
+use App\Models\AiSession;
+use App\Models\AiStep;
 use App\Models\Asset;
 use App\Models\AssetVersion;
 use App\Models\ChangeLog;
@@ -79,6 +83,8 @@ class SyncPayloads
             SyncEntity::ProjectMemory => ProjectMemory::query(),
             SyncEntity::ProjectAsset => ProjectAsset::query(),
             SyncEntity::TaskOutput => TaskOutput::query(),
+            SyncEntity::AiSession => AiSession::withTrashed(),
+            SyncEntity::AiStep => AiStep::query(),
         };
     }
 
@@ -95,6 +101,8 @@ class SyncPayloads
             SyncEntity::ProjectMemory => (new ProjectMemoryResource($row))->resolve($request),
             SyncEntity::ProjectAsset => $row->only(['id', 'project_id', 'asset_id', 'pinned_version_id', 'role', 'updated_at']),
             SyncEntity::TaskOutput => [...$row->only(['id', 'task_id', 'asset_id', 'updated_at']), 'role' => $row->role->value],
+            SyncEntity::AiSession => (new AiSessionResource($row))->resolve($request),
+            SyncEntity::AiStep => (new AiStepResource($row))->resolve($request),
         };
     }
 }

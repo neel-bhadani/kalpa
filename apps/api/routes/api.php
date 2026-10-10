@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AiController;
+use App\Http\Controllers\Api\V1\AiProviderController;
 use App\Http\Controllers\Api\V1\AssetController;
 use App\Http\Controllers\Api\V1\AssetLinkController;
 use App\Http\Controllers\Api\V1\AssetVersionController;
@@ -9,6 +11,7 @@ use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\JobController;
+use App\Http\Controllers\Api\V1\ModelController;
 use App\Http\Controllers\Api\V1\ModuleController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProjectAssetController;
@@ -40,6 +43,12 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
+    // My own AI providers (not workspace-scoped).
+    Route::get('/ai/providers', [AiProviderController::class, 'index']);
+    Route::post('/ai/providers', [AiProviderController::class, 'store']);
+    Route::patch('/ai/providers/{provider}', [AiProviderController::class, 'update'])->whereUuid('provider');
+    Route::delete('/ai/providers/{provider}', [AiProviderController::class, 'destroy'])->whereUuid('provider');
+
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/read', [NotificationController::class, 'markAllRead']);
 
@@ -55,6 +64,25 @@ Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
 
     Route::get('/dashboard', DashboardController::class);
+
+    Route::get('/models', [ModelController::class, 'index']);
+
+    Route::whereUuid(['task', 'session', 'step', 'project'])->group(function () {
+        Route::get('/tasks/{task}/ai/sessions', [AiController::class, 'sessions']);
+        Route::post('/tasks/{task}/ai/sessions', [AiController::class, 'start']);
+        Route::get('/ai/sessions/{session}', [AiController::class, 'show']);
+        Route::patch('/ai/sessions/{session}', [AiController::class, 'update']);
+        Route::post('/ai/sessions/{session}/messages', [AiController::class, 'addMessage']);
+        Route::post('/ai/sessions/{session}/steps', [AiController::class, 'addStep']);
+
+        Route::patch('/ai/steps/{step}', [AiController::class, 'updateStep']);
+        Route::post('/ai/steps/{step}/approve', [AiController::class, 'approve']);
+        Route::post('/ai/steps/{step}/reject', [AiController::class, 'reject']);
+        Route::post('/ai/steps/{step}/undo', [AiController::class, 'undo']);
+        Route::post('/ai/steps/{step}/retry', [AiController::class, 'retry']);
+
+        Route::post('/projects/{project}/plans', [AiController::class, 'plan']);
+    });
 
     Route::get('/sync', [SyncController::class, 'pull']);
     Route::post('/sync', [SyncController::class, 'push']);

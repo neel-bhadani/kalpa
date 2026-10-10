@@ -18,7 +18,12 @@ const icon = computed(() => findModule(props.task.module)?.icon ?? 'square')
       <AppIcon :name="icon" :size="16" />
       <span class="truncate">{{ task.module_name ?? task.module }} task</span>
     </span>
-    <span class="min-w-0 flex-1 truncate">{{ task.title }}</span>
+    <span class="min-w-0 flex-1 truncate">
+      {{ task.title }}
+      <span v-if="task.depends_on_titles?.length" class="ml-2 text-xs text-muted" data-test="depends-on">
+        after: {{ task.depends_on_titles.join(', ') }}
+      </span>
+    </span>
     <UnsavedChip v-if="sync.isUnsaved(task)" data-test="unsaved" />
     <StatusBadge :task="task" />
     <span v-if="task.project_name" class="max-w-40 truncate text-sm text-muted">({{ task.project_name }})</span>

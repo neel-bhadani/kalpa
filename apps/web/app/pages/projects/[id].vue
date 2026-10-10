@@ -8,6 +8,25 @@ const projectId = route.params.id as string
 
 const project = ref<Project | null>(null)
 const projectAssets = ref<ProjectAsset[]>([])
+
+// The Producer (fake brain for now) plans a goal into three linked tasks; nothing runs yet.
+const goal = ref('')
+const planning = ref(false)
+const planned = ref('')
+
+async function planWithProducer() {
+  planning.value = true
+  errors.clear()
+  try {
+    const { data } = await api<{ data: { tasks: Task[] } }>(`/api/v1/projects/${projectId}/plans`, { method: 'POST', body: { goal: goal.value } })
+    planned.value = `Planned ${data.tasks.length} tasks: ${data.tasks.map(task => task.title.split(':')[0]).join(' → ')}.`
+    await loadTasks()
+  } catch (error) {
+    errors.show(error)
+  } finally {
+    planning.value = false
+  }
+}
 const tasks = ref<Task[]>([])
 const nextCursor = ref<string | null>(null)
 
@@ -102,6 +121,17 @@ await run(async () => {
   <main class="mx-auto max-w-4xl p-6">
     <NuxtLink to="/projects" class="text-sm text-muted hover:text-text">← Projects</NuxtLink>
     <h1 class="mt-2 text-2xl font-semibold">{{ project?.name ?? 'Project' }}</h1>
+
+    <form class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-panel p-3" @submit.prevent="planWithProducer">
+      <span class="text-sm text-accent">Producer</span>
+      <input v-model="goal" placeholder="Goal, e.g. a one-minute night market short" class="field !mt-0 min-w-64 flex-1" aria-label="Goal">
+      <button :disabled="planning || !goal.trim()" class="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-bg disabled:opacity-50" data-test="plan">
+        Plan with Producer (demo)
+      </button>
+      <p v-if="planned" class="w-full text-xs text-muted" data-test="planned">
+        {{ planned }} <NuxtLink to="/" class="text-accent hover:underline">See them on the dashboard</NuxtLink>
+      </p>
+    </form>
     <p v-if="project" class="mt-1 text-sm text-muted">{{ project.style }} · {{ project.aspect_ratio }}</p>
 
     <section class="mt-6">

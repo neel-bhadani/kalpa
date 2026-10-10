@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue'
-import type { EditorTask } from '../../core/src/modules'
+import type { EditorHighlight, EditorTask } from '../../core/src/modules'
 import type { Checkpoint } from '../../core/src/sync/checkpoint'
+import { placeholderCommands } from './placeholder-commands'
 
 // Stand-in editor shown by every module until its real editor arrives. It already keeps a real
 // checkpoint, so resuming on another device can be tried: notes (data) plus which tab is open
-// and how far the details are scrolled (view).
-const props = defineProps<{ moduleName: string; task: EditorTask; checkpoint: Checkpoint }>()
+// and how far the details are scrolled (view). Its tab buttons and typing go through the same
+// commands an assistant uses (placeholder-commands.ts); `highlight` shows an assistant's step happening.
+const props = defineProps<{ moduleName: string; task: EditorTask; checkpoint: Checkpoint; highlight?: EditorHighlight }>()
 const emit = defineEmits<{ 'update:checkpoint': [checkpoint: Checkpoint] }>()
 
 type Tab = 'notes' | 'details'
@@ -34,10 +36,41 @@ function save() {
   emit('update:checkpoint', current())
 }
 
+// The same command the assistant's view.selectTab runs.
 function selectTab(next: Tab) {
   tab.value = next
-  save()
+  emit('update:checkpoint', placeholderCommands['view.selectTab']!.apply(current(), { tab: next }))
 }
+
+// Typing: the same command as the assistant's notes.replace.
+function onNotesInput() {
+  emit('update:checkpoint', placeholderCommands['notes.replace']!.apply(current(), { text: notes.value }))
+}
+
+// Visible process: briefly mark what an assistant step just changed.
+const flashTab = ref(false)
+const added = ref('')
+const notesField = ref<HTMLTextAreaElement | null>(null)
+let flashTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(() => props.highlight, async (change) => {
+  if (!change) return
+  clearTimeout(flashTimer)
+  if (change.tool === 'view.selectTab') {
+    flashTab.value = true
+  } else if (change.tool.startsWith('notes.')) {
+    added.value = String(change.args.text ?? '')
+    await nextTick()
+    // Select the new text so it stands out in the field.
+    const field = notesField.value
+    const start = field ? field.value.lastIndexOf(added.value) : -1
+    if (field && start >= 0) field.setSelectionRange(start, start + added.value.length)
+  }
+  flashTimer = setTimeout(() => {
+    flashTab.value = false
+    added.value = ''
+  }, 2500)
+})
 
 // Scroll position is saved a moment after scrolling stops.
 let scrollTimer: ReturnType<typeof setTimeout> | undefined
@@ -63,7 +96,11 @@ const shotList = Array.from({ length: 40 }, (_, i) => `Shot ${i + 1}: placeholde
     <h2 class="mt-1 text-xl font-semibold">{{ task.title }}</h2>
     <p class="mt-2 font-mono text-xs text-muted">status: {{ task.status }} · mode: {{ task.mode }}</p>
 
-    <nav class="mt-6 flex gap-4 border-b border-muted/15 text-sm" role="tablist">
+    <nav
+      class="mt-6 flex gap-4 border-b border-muted/15 text-sm transition-shadow"
+      :class="flashTab && 'rounded-md shadow-[0_0_0_2px_rgba(139,124,255,0.6)]'"
+      role="tablist"
+    >
       <button
         v-for="name in (['notes', 'details'] as Tab[])"
         :key="name"
@@ -80,13 +117,16 @@ const shotList = Array.from({ length: 40 }, (_, i) => `Shot ${i + 1}: placeholde
 
     <div v-if="tab === 'notes'" class="mt-4">
       <textarea
+        ref="notesField"
         v-model="notes"
         rows="8"
         placeholder="Notes for this task. They're saved on this device at once and synced to your other devices."
-        class="w-full rounded-lg border border-muted/30 bg-bg p-3 text-sm outline-none focus:border-accent"
+        class="w-full rounded-lg border bg-bg p-3 text-sm outline-none transition-colors focus:border-accent"
+        :class="added ? 'border-accent shadow-[0_0_0_3px_rgba(139,124,255,0.25)]' : 'border-muted/30'"
         data-test="notes"
-        @input="save"
+        @input="onNotesInput"
       />
+      <p v-if="added" class="mt-2 text-xs text-accent" data-test="added">✦ Added by the assistant: {{ added }}</p>
     </div>
 
     <div v-else ref="details" class="mt-4 h-64 overflow-y-auto rounded-lg bg-bg p-3" data-test="details" @scroll="onScroll">

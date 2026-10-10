@@ -33,7 +33,7 @@ class DashboardController extends Controller
 
         $continue = $this->workspaceTasks($current)
             ->whereNotIn('status', [TaskStatus::Completed, TaskStatus::Archived])
-            ->with('project')
+            ->with(['project', 'dependsOn'])
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->limit(3)
@@ -55,7 +55,7 @@ class DashboardController extends Controller
                 fn ($query) => $query->whereIn('status', $statuses),
                 fn ($query) => $query->where('status', '!=', TaskStatus::Archived),
             )
-            ->with('project')
+            ->with(['project', 'dependsOn'])
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->cursorPaginate($this->perPage($request));

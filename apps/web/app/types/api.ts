@@ -40,6 +40,7 @@ export type Task = {
   mode: TaskMode
   assigned_to: 'user' | 'assistant'
   depends_on: string[]
+  depends_on_titles?: string[]
   progress: number
   has_unsynced_changes: boolean
   row_version: number

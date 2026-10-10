@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(ModelRegistrySeeder::class);
+
         // Local test account, with its personal workspace.
         app(RegisterUser::class)->handle('Test User', 'test@example.com', 'password');
     }

@@ -5,6 +5,8 @@ namespace App\Core\Sync;
 use App\Enums\ChangeOp;
 use App\Enums\SyncEntity;
 use App\Events\SyncNudge;
+use App\Models\AiSession;
+use App\Models\AiStep;
 use App\Models\Asset;
 use App\Models\AssetVersion;
 use App\Models\ChangeLog;
@@ -72,6 +74,8 @@ class ChangeRecorder
             $model instanceof ProjectMemory => SyncEntity::ProjectMemory,
             $model instanceof ProjectAsset => SyncEntity::ProjectAsset,
             $model instanceof TaskOutput => SyncEntity::TaskOutput,
+            $model instanceof AiSession => SyncEntity::AiSession,
+            $model instanceof AiStep => SyncEntity::AiStep,
             default => throw new InvalidArgumentException('Not a synced model: '.$model::class),
         };
     }
@@ -87,6 +91,8 @@ class ChangeRecorder
             $model instanceof TaskOutput => array_filter([Task::withTrashed()->find($model->task_id)?->project_id]),
             $model instanceof Asset => ProjectAsset::where('asset_id', $model->id)->pluck('project_id')->all(),
             $model instanceof AssetVersion => ProjectAsset::where('asset_id', $model->asset_id)->pluck('project_id')->all(),
+            $model instanceof AiSession => [$model->project_id],
+            $model instanceof AiStep => [$model->session->project_id],
         };
     }
 }

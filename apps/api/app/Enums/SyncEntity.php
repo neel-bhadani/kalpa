@@ -14,4 +14,6 @@ enum SyncEntity: string
     case ProjectMemory = 'project_memory';
     case ProjectAsset = 'project_asset';
     case TaskOutput = 'task_output';
+    case AiSession = 'ai_session';
+    case AiStep = 'ai_step';
 }

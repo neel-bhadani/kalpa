@@ -18,6 +18,8 @@
         </include>
     </source>
     <php>
+        <!-- The suite holds a few 5 MB upload parts in memory; PHP's default 128M runs out by the end. -->
+        <ini name="memory_limit" value="384M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

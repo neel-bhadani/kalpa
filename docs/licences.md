@@ -19,3 +19,26 @@ Every model, asset, dataset and third-party library chosen for Kalpa Studio (fra
 | idb | JS library (promise wrapper for IndexedDB) | 8.0 | ISC | Yes | https://github.com/jakearchibald/idb | Web: offline cache and outbox (packages/core/src/sync) |
 | fake-indexeddb | JS library (IndexedDB for tests; dev only) | 6.2 | Apache-2.0 | Yes | https://github.com/dumbmatter/fakeIndexedDB | Vitest: sync tests |
 | @vite-pwa/nuxt | JS library (service worker / offline app shell; brings vite-plugin-pwa and Workbox, both MIT; build time only) | 1.1 | MIT | Yes | https://github.com/vite-pwa/nuxt | Web: offline app shell |
+
+## Models
+
+Every model in `model_registry` (seeded from `apps/api/config/models.php`, same licence text).
+Mark: **registered, not used yet** until a phase wires the model; then **in use**. A model without
+commercial use can't be switched on (database CHECK: enabled implies commercial_ok).
+
+| Model | Capability | Licence | Commercial use | Source | Mark |
+| --- | --- | --- | --- | --- | --- |
+| fake-brain | llm | Kalpa Studio code (dev and tests only) | Yes | this repo | in use (dev) |
+| qwen3-0.6b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-0.6B | registered, not used yet |
+| qwen3-1.7b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-1.7B | registered, not used yet |
+| qwen3-4b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-4B | registered, not used yet |
+| kokoro-82m | tts | Apache-2.0 | Yes | https://huggingface.co/hexgrad/Kokoro-82M | registered, not used yet |
+| piper | tts | unclear: original rhasspy/piper (MIT) archived Oct 2025; successor piper1-gpl is GPL-3.0; each voice has its own licence | No (on hold; Kokoro for English, Chatterbox for other languages) | https://github.com/rhasspy/piper | registered, not used yet |
+| chatterbox-multilingual | voice_clone | MIT | Yes | https://github.com/resemble-ai/chatterbox | registered, not used yet |
+| ace-step-1.5 | music | MIT (code and weights; model card: generated music may be used commercially) | Yes | https://github.com/ace-step/ACE-Step | registered, not used yet |
+| real-esrgan-x4plus | upscale | BSD-3-Clause | Yes | https://github.com/xinntao/Real-ESRGAN | registered, not used yet |
+| whisper-small | stt | MIT | Yes | https://huggingface.co/openai/whisper-small | registered, not used yet |
+| sam2 | segment | Apache-2.0 | Yes | https://github.com/facebookresearch/sam2 | registered, not used yet |
+| depth-anything-v2-small | depth | Apache-2.0 (Small only; Base and Large are CC-BY-NC) | Yes | https://huggingface.co/depth-anything/Depth-Anything-V2-Small | registered, not used yet |
+| flux1-schnell | image | Apache-2.0 (schnell only; FLUX.1 [dev] is non-commercial) | Yes | https://huggingface.co/black-forest-labs/FLUX.1-schnell | registered, not used yet |
+| trellis | asset3d | unclear: models MIT, but needs nvdiffrast (NVIDIA Source Code License, non-commercial only) and diffoctreerast (derived from diff-gaussian-rasterization) | No (on hold until P4 checks alternatives) | https://github.com/microsoft/TRELLIS | registered, not used yet |

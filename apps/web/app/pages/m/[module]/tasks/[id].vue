@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { findModule } from '@kalpa/core'
-import type { EditorTask } from '@kalpa/core'
+import type { EditorHighlight, EditorTask } from '@kalpa/core'
+import type { CheckpointPort } from '@kalpa/ai-runtime'
 import type { CursorPage, Job, JobUpdate, Task, TaskUpdate } from '~/types/api'
 
 const route = useRoute()
@@ -18,6 +19,21 @@ const offline = ref(false)
 
 // The checkpoint: notes and view state, kept on this device and synced (see useTaskCheckpoint).
 const checkpoint = useTaskCheckpoint(taskId)
+
+// The assistant edits the same checkpoint, through the module's commands. `highlight` lets the
+// editor show each step happening; AI changes are sent at once rather than after the usual 2 s.
+const highlight = ref<EditorHighlight>(null)
+const assistantPort: CheckpointPort = {
+  // A plain copy, not the editor's reactive one.
+  get: () => JSON.parse(JSON.stringify(checkpoint.checkpoint.value)),
+  set: async (next, change) => {
+    await checkpoint.save(next)
+    checkpoint.flush()
+    highlight.value = { ...change, at: Date.now() }
+  },
+}
+const showAssistant = ref(localStorage.getItem('kalpa.assistant') !== 'hidden')
+watch(showAssistant, value => localStorage.setItem('kalpa.assistant', value ? 'shown' : 'hidden'))
 
 // The module's editor, downloaded only now (its own chunk).
 const Editor = module
@@ -104,7 +120,7 @@ try {
 </script>
 
 <template>
-  <main class="mx-auto max-w-4xl p-6">
+  <main class="mx-auto p-6" :class="showAssistant ? 'max-w-7xl' : 'max-w-4xl'">
     <NuxtLink v-if="module" :to="`/m/${module.key}`" class="text-sm text-muted hover:text-text">← {{ module.name }}</NuxtLink>
 
     <p v-if="errors.message.value" class="mt-4 text-sm text-red-400">{{ errors.message.value }}</p>
@@ -125,6 +141,14 @@ try {
         >
           Run demo job
         </button>
+        <button
+          class="rounded-lg border border-muted/30 px-3 py-1.5 text-xs hover:border-accent hover:text-accent"
+          :class="!(isDev && !offline) && 'ml-auto'"
+          data-test="toggle-assistant"
+          @click="showAssistant = !showAssistant"
+        >
+          {{ showAssistant ? 'Hide assistant' : 'Assistant' }}
+        </button>
       </div>
 
       <ul v-if="jobs.length" class="mt-3 space-y-1 text-xs">
@@ -136,8 +160,23 @@ try {
         </li>
       </ul>
 
-      <div v-if="Editor && checkpoint.ready.value" class="mt-4">
-        <component :is="Editor" :task="task" :checkpoint="checkpoint.checkpoint.value" @update:checkpoint="checkpoint.save" />
+      <div class="mt-4 grid items-start gap-4" :class="showAssistant && 'lg:grid-cols-[minmax(0,1fr)_380px]'">
+        <div v-if="Editor && checkpoint.ready.value">
+          <component
+            :is="Editor"
+            :task="task"
+            :checkpoint="checkpoint.checkpoint.value"
+            :highlight="highlight"
+            @update:checkpoint="checkpoint.save"
+          />
+        </div>
+        <AssistantPanel
+          v-if="showAssistant && !offline && checkpoint.ready.value"
+          class="lg:sticky lg:top-4 lg:h-[calc(100vh-8rem)]"
+          :task-id="taskId"
+          :module="task.module"
+          :checkpoint="assistantPort"
+        />
       </div>
     </template>
   </main>

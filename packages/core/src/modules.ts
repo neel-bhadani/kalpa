@@ -24,6 +24,32 @@ export type EditorTask = {
   outputs?: { role: string; asset: { id: string; name: string; kind_label: string; current_version?: { number: number } } }[]
 }
 
+// A subset of JSON Schema, enough to describe command arguments.
+export type JsonSchema = {
+  type?: 'object' | 'string' | 'number' | 'integer' | 'boolean' | 'array'
+  description?: string
+  properties?: Record<string, JsonSchema>
+  required?: string[]
+  additionalProperties?: boolean
+  enum?: (string | number)[]
+  minLength?: number
+  maxLength?: number
+  items?: JsonSchema
+}
+
+// A module command: something both the UI and an assistant can do to a task's checkpoint.
+// The UI's buttons and the assistant's tool calls go through the same apply().
+export type ModuleCommand = {
+  description: string
+  // The arguments, as JSON Schema (also what the assistant's brain sees).
+  schema: JsonSchema
+  // Returns the new checkpoint; never changes the one given.
+  apply: (checkpoint: Record<string, any>, args: Record<string, any>) => Record<string, any>
+}
+
+// Shown by an editor while an assistant step changes it ("visible process").
+export type EditorHighlight = { tool: string; args: Record<string, unknown>; at: number } | null
+
 export type ClientModule = {
   // Same key as the server manifest (app/Modules/<Name>/Manifest.php).
   key: string
@@ -32,6 +58,8 @@ export type ClientModule = {
   icon: string
   // Asset kinds this module owns; each kind has packages/schemas/<kind>.schema.json.
   assetKinds: string[]
+  // Commands the editor offers: the UI and the assistant use them alike.
+  commands: Record<string, ModuleCommand>
   // Lazy-loads the editor component (a Vue component; typed loosely to keep core free of Vue).
   editor: () => Promise<{ default: unknown }>
 }

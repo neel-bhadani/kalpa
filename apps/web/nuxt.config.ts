@@ -42,6 +42,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   alias: {
     '@kalpa/core': `${packagesDir}/core/src`,
+    '@kalpa/ai-runtime': `${packagesDir}/ai-runtime/src`,
   },
   typescript: {
     // Let files in packages/ find the types of packages installed here (paths are relative to .nuxt/).

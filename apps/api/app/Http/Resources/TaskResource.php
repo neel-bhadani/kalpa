@@ -34,6 +34,7 @@ class TaskResource extends JsonResource
             'assigned_to' => $this->assigned_to,
             'parent_task_id' => $this->parent_task_id,
             'depends_on' => $this->whenLoaded('dependsOn', fn () => $this->dependsOn->pluck('id')),
+            'depends_on_titles' => $this->whenLoaded('dependsOn', fn () => $this->dependsOn->pluck('title')),
             // Checkpoints can be large: only sent on single-task routes, not in lists.
             'checkpoint' => $this->when($request->route('task') !== null, fn () => $this->checkpoint),
             'has_unsynced_changes' => $this->has_unsynced_changes,
