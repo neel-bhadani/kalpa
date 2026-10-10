@@ -7,6 +7,11 @@ async function logout() {
   await navigateTo('/login')
 }
 
+// Signed in: this tab starts running device jobs (and live updates connect on first use).
+onMounted(() => {
+  useBrowserWorker().start().catch(error => console.warn('[kalpa worker] could not start', error))
+})
+
 // Below 768px (md) the sidebar shows icons only.
 const linkClasses = 'flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-muted hover:bg-bg hover:text-text'
 const activeClasses = '!bg-accent/10 !text-text'
@@ -56,7 +61,10 @@ const activeClasses = '!bg-accent/10 !text-text'
           <p class="truncate font-semibold">Welcome, {{ auth.user?.name }}</p>
           <p class="truncate text-xs text-muted">{{ auth.currentWorkspace?.name }}</p>
         </div>
-        <button class="rounded-lg border border-muted/30 px-3 py-1.5 text-sm hover:bg-panel" @click="logout">Log out</button>
+        <div class="flex items-center gap-2">
+          <NotificationBell />
+          <button class="rounded-lg border border-muted/30 px-3 py-1.5 text-sm hover:bg-panel" @click="logout">Log out</button>
+        </div>
       </header>
 
       <slot />

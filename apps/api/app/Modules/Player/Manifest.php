@@ -38,4 +38,9 @@ class Manifest implements ModuleManifest
         // Works with other modules' assets; owns no kind of its own.
         return [];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateWorker;
 use App\Http\Middleware\EnsureWorkspaceMember;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,12 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    // Channel auth at /api/broadcasting/auth, same session/token auth as the API.
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', ['prefix' => 'api', 'middleware' => ['api', 'auth:sanctum']])
     ->withMiddleware(function (Middleware $middleware): void {
         // Cookie sessions for the web app (same origin through Caddy).
         $middleware->statefulApi();
 
         // Check the workspace before route models load, so non-members learn nothing about ids.
-        $middleware->alias(['workspace' => EnsureWorkspaceMember::class]);
+        $middleware->alias(['workspace' => EnsureWorkspaceMember::class, 'worker' => AuthenticateWorker::class]);
         $middleware->prependToPriorityList(
             before: SubstituteBindings::class,
             prepend: EnsureWorkspaceMember::class,

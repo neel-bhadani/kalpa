@@ -40,4 +40,9 @@ class Manifest implements ModuleManifest
             'brand_kit' => 'Brand kit',
         ];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

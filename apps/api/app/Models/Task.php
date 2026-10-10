@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TaskAssignee;
 use App\Enums\TaskMode;
 use App\Enums\TaskStatus;
+use App\Events\TaskUpdated;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -32,6 +33,13 @@ class Task extends Model
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Every change goes out live (status, progress, title) once the transaction commits.
+        static::saved(fn (Task $task) => TaskUpdated::dispatch($task));
+        static::deleted(fn (Task $task) => TaskUpdated::dispatch($task));
     }
 
     public function project(): BelongsTo

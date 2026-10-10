@@ -70,6 +70,8 @@ export const useAuthStore = defineStore('auth', () => {
     setProfile(null)
     useDevicesStore().reset()
     useModulesStore().reset()
+    useBrowserWorker().stop()
+    useRealtime().disconnect()
   }
 
   return { user, workspaces, currentWorkspace, checked, fetchMe, register, login, logout }

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kalpa.studio/schemas/vfx_shot.schema.json",
+  "title": "VFX shot",
+  "description": "Spec of a \"vfx_shot\" asset. Minimal for now; the owning module extends it.",
+  "x-schema-version": 1,
+  "type": "object",
+  "required": [
+    "name",
+    "plate_file_id"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "plate_file_id": {
+      "type": "string",
+      "description": "The live-action footage (a file id)."
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}

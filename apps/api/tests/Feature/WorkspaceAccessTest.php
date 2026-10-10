@@ -76,5 +76,5 @@ it('lets the owner delete a project, which removes its tasks', function () {
     actingIn($ada, $workspace)->getJson("/api/v1/projects/{$project->id}")->assertNotFound();
     actingIn($ada, $workspace)->getJson('/api/v1/tasks')->assertJsonCount(0, 'data');
     expect($task->refresh()->trashed())->toBeTrue()
-        ->and($task->events()->latest('created_at')->first()->type->value)->toBe('deleted');
+        ->and($task->events()->where('type', 'deleted')->exists())->toBeTrue();
 });

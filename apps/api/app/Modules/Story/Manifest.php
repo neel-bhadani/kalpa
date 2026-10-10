@@ -41,4 +41,9 @@ class Manifest implements ModuleManifest
             'script' => 'Script',
         ];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

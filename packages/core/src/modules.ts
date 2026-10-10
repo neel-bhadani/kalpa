@@ -4,6 +4,7 @@
 import story from '../../modules/story/manifest'
 import character from '../../modules/character/manifest'
 import assets3d from '../../modules/assets3d/manifest'
+import cgi from '../../modules/cgi/manifest'
 import voice from '../../modules/voice/manifest'
 import music from '../../modules/music/manifest'
 import video from '../../modules/video/manifest'
@@ -38,7 +39,7 @@ export type ClientModule = {
 // Generic asset kinds owned by the core; any module may create them.
 export const coreAssetKinds = ['image', 'audio', 'video', 'file']
 
-export const modules: ClientModule[] = [story, character, assets3d, voice, music, video, ads, player, io]
+export const modules: ClientModule[] = [story, character, assets3d, cgi, voice, music, video, ads, player, io]
 
 export function findModule(key: string): ClientModule | undefined {
   return modules.find(module => module.key === key)

@@ -16,7 +16,7 @@ class TaskOutputController extends Controller
 
         $outputs = $task->outputs()
             ->whereHas('asset')
-            ->with('asset.currentVersion.assetFiles.file')
+            ->with('asset.currentVersion.assetFiles.file.thumb.file')
             ->orderBy('created_at')
             ->get();
 

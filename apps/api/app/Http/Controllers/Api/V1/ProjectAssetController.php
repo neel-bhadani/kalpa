@@ -25,7 +25,7 @@ class ProjectAssetController extends Controller
 
         $items = $project->projectAssets()
             ->whereHas('asset')
-            ->with(['asset.currentVersion.assetFiles.file', 'pinnedVersion'])
+            ->with(['asset.currentVersion.assetFiles.file.thumb.file', 'pinnedVersion'])
             ->orderBy('created_at')
             ->get();
 

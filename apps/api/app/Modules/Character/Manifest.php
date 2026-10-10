@@ -41,4 +41,9 @@ class Manifest implements ModuleManifest
             'motion' => 'Motion',
         ];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

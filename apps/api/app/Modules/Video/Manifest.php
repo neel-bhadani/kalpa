@@ -41,4 +41,9 @@ class Manifest implements ModuleManifest
             'timeline' => 'Timeline',
         ];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

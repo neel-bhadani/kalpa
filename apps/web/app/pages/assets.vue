@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { coreAssetKinds } from '@kalpa/core'
 import { FileUpload, type UploadState, type UploadedFile } from '@kalpa/core/upload'
-import type { Asset, CursorPage, Project } from '~/types/api'
+import type { Asset, CursorPage, JobUpdate, Project } from '~/types/api'
 
 const api = useApi()
 const uploadApi = useUploadApi()
@@ -111,6 +111,15 @@ function percent(state: UploadState): number {
 }
 
 const canWrite = computed(() => auth.currentWorkspace?.role !== 'viewer')
+
+// Thumbnails are made on the server after upload (file.thumbnail); show them as soon as they're ready.
+let thumbTimer: ReturnType<typeof setTimeout> | undefined
+useLiveEvent(() => (auth.user ? `user.${auth.user.id}` : null), 'JobUpdated', (update: JobUpdate) => {
+  if (update.type === 'file.thumbnail' && update.status === 'succeeded') {
+    clearTimeout(thumbTimer)
+    thumbTimer = setTimeout(() => load(), 300)
+  }
+})
 
 await Promise.all([
   load(),

@@ -6,6 +6,7 @@ use App\Enums\DerivativeKind;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A file made from another one (proxy, thumbnail, LOD...). Filled by jobs in P0 step 7.
@@ -18,5 +19,10 @@ class FileDerivative extends Model
     protected function casts(): array
     {
         return ['kind' => DerivativeKind::class, 'params' => 'object'];
+    }
+
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(File::class);
     }
 }

@@ -12,6 +12,7 @@ return [
         Manifest::class,
         App\Modules\Character\Manifest::class,
         App\Modules\Assets3d\Manifest::class,
+        App\Modules\Cgi\Manifest::class,
         App\Modules\Voice\Manifest::class,
         App\Modules\Music\Manifest::class,
         App\Modules\Video\Manifest::class,

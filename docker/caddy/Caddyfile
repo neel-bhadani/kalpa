@@ -1,6 +1,6 @@
 :80 {
-	# Laravel API and Sanctum (CSRF cookie)
-	@api path /api/* /sanctum/*
+	# Laravel API, Sanctum (CSRF cookie) and the Horizon dashboard (local env, owners only)
+	@api path /api/* /sanctum/* /horizon /horizon/*
 	handle @api {
 		reverse_proxy api:8000
 	}
@@ -13,6 +13,12 @@
 		header X-Content-Type-Options nosniff
 		header Content-Security-Policy sandbox
 		reverse_proxy seaweedfs:8333
+	}
+
+	# Reverb websockets (Pusher protocol path), same origin as the app.
+	@reverb path /app/*
+	handle @reverb {
+		reverse_proxy reverb:8080
 	}
 
 	# Everything else: Nuxt

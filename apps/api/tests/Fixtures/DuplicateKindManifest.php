@@ -38,4 +38,9 @@ class DuplicateKindManifest implements ModuleManifest
     {
         return ['script' => 'Script'];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

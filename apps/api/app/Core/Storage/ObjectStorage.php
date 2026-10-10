@@ -168,6 +168,53 @@ class ObjectStorage
         }
     }
 
+    /**
+     * SHA-256 of a stored object, read as a stream in 1 MB pieces (never the whole file in memory).
+     */
+    public function sha256(string $path): string
+    {
+        $body = $this->client->getObject([
+            'Bucket' => $this->bucket,
+            'Key' => $path,
+            '@http' => ['stream' => true],
+        ])['Body'];
+
+        $context = hash_init('sha256');
+        while (! $body->eof()) {
+            hash_update($context, $body->read(1024 * 1024));
+        }
+
+        return hash_final($context);
+    }
+
+    /**
+     * Copy inside the bucket (server side; the bytes don't pass through PHP).
+     */
+    public function copy(string $from, string $to): void
+    {
+        $this->client->copyObject([
+            'Bucket' => $this->bucket,
+            'Key' => $to,
+            'CopySource' => "{$this->bucket}/{$from}",
+        ]);
+    }
+
+    /**
+     * The whole object as a string. Only for small files (thumbnail sources are capped).
+     */
+    public function get(string $path): string
+    {
+        return (string) $this->client->getObject(['Bucket' => $this->bucket, 'Key' => $path])['Body'];
+    }
+
+    /**
+     * Store small server-made files (thumbnails).
+     */
+    public function put(string $path, string $bytes, string $mime): void
+    {
+        $this->client->putObject(['Bucket' => $this->bucket, 'Key' => $path, 'Body' => $bytes, 'ContentType' => $mime]);
+    }
+
     public function delete(string $path): void
     {
         $this->client->deleteObject(['Bucket' => $this->bucket, 'Key' => $path]);

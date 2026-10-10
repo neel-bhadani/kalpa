@@ -8,7 +8,9 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FileController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\JobController;
 use App\Http\Controllers\Api\V1\ModuleController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProjectAssetController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectMemoryController;
@@ -17,6 +19,8 @@ use App\Http\Controllers\Api\V1\TaskDependencyController;
 use App\Http\Controllers\Api\V1\TaskOutputController;
 use App\Http\Controllers\Api\V1\TokenController;
 use App\Http\Controllers\Api\V1\UploadController;
+use App\Http\Controllers\Api\V1\WorkerController;
+use App\Http\Controllers\Api\V1\WorkerJobController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -35,6 +39,9 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/read', [NotificationController::class, 'markAllRead']);
+
     Route::get('/devices', [DeviceController::class, 'index']);
     Route::post('/devices', [DeviceController::class, 'store']);
     Route::patch('/devices/{device}', [DeviceController::class, 'update'])->whereUuid('device')->can('update', 'device');
@@ -47,6 +54,21 @@ Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
 
     Route::get('/dashboard', DashboardController::class);
+
+    Route::whereUuid(['job', 'worker'])->group(function () {
+        Route::get('/jobs', [JobController::class, 'index']);
+        Route::post('/jobs', [JobController::class, 'store']);
+        Route::get('/jobs/{job}', [JobController::class, 'show']);
+        Route::post('/jobs/{job}/cancel', [JobController::class, 'cancel']);
+        Route::post('/jobs/{job}/pause', [JobController::class, 'pause']);
+        Route::post('/jobs/{job}/resume', [JobController::class, 'resume']);
+        Route::post('/jobs/{job}/retry', [JobController::class, 'retry']);
+
+        Route::get('/workers', [WorkerController::class, 'index']);
+        Route::delete('/workers/{worker}', [WorkerController::class, 'destroy']);
+        Route::post('/workers/pairing-codes', [WorkerController::class, 'pairingCode']);
+        Route::post('/workers/browser', [WorkerController::class, 'registerBrowser']);
+    });
 
     Route::whereUuid(['upload', 'file'])->group(function () {
         Route::post('/uploads', [UploadController::class, 'store'])->middleware('throttle:uploads');
@@ -105,4 +127,15 @@ Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
         Route::post('/tasks/{task}/dependencies', [TaskDependencyController::class, 'store']);
         Route::delete('/tasks/{task}/dependencies', [TaskDependencyController::class, 'destroy']);
     });
+});
+
+// A local worker trades a pairing code for its token (no login yet).
+Route::post('/workers/pair', [WorkerController::class, 'pair'])->middleware('throttle:pairing');
+
+// The claim protocol: paired workers (kw_ token) and browser tabs (session + X-Worker-Id).
+Route::middleware('worker')->whereUuid('job')->group(function () {
+    Route::post('/workers/claim', [WorkerJobController::class, 'claim']);
+    Route::post('/jobs/{job}/heartbeat', [WorkerJobController::class, 'heartbeat']);
+    Route::post('/jobs/{job}/complete', [WorkerJobController::class, 'complete']);
+    Route::post('/jobs/{job}/fail', [WorkerJobController::class, 'fail']);
 });

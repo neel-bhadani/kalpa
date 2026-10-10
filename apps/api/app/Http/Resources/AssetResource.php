@@ -39,7 +39,7 @@ class AssetResource extends JsonResource
     }
 
     /**
-     * A short-lived URL for the current version's thumbnail, or its image if it has no thumbnail.
+     * A short-lived URL for the current version's thumbnail.
      */
     private function thumbnailUrl(): ?string
     {
@@ -48,16 +48,19 @@ class AssetResource extends JsonResource
         }
 
         $files = $this->currentVersion->assetFiles;
-        $pick = $files->first(fn (AssetFile $file) => $file->role === AssetFileRole::Thumbnail)
-            ?? $files->first(fn (AssetFile $file) => $file->role === AssetFileRole::Image);
+        $thumbnail = $files->first(fn (AssetFile $file) => $file->role === AssetFileRole::Thumbnail)?->file;
+        $image = $files->first(fn (AssetFile $file) => $file->role === AssetFileRole::Image)?->file;
+
+        // An explicit thumbnail, else the image's generated thumb (file.thumbnail job), else the image itself.
+        $pick = $thumbnail ?? ($image?->relationLoaded('thumb') ? $image->thumb?->file : null) ?? $image;
 
         if ($pick === null) {
             return null;
         }
 
         return app(ObjectStorage::class)->presignGet(
-            $pick->file->path,
-            $pick->file->mime,
+            $pick->path,
+            $pick->mime,
             now()->addMinutes(config('uploads.download_url_minutes')),
         );
     }

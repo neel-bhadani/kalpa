@@ -1,7 +1,7 @@
 FROM dunglas/frankenphp:1-php8.5
 
-# PHP extensions Laravel needs here: Postgres, Redis, queues (pcntl), intl, zip.
-RUN install-php-extensions pdo_pgsql redis pcntl intl zip opcache @composer
+# PHP extensions Laravel needs here: Postgres, Redis, queues (pcntl), intl, zip, GD (thumbnails).
+RUN install-php-extensions pdo_pgsql redis pcntl intl zip opcache gd @composer
 
 # Run as the host user so files created in the bind mount stay editable.
 ARG UID=1000

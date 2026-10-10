@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['workspace_id', 'sha256', 'size_bytes', 'mime', 'storage_disk', 'path', 'width', 'height', 'duration_ms', 'created_by'])]
 class File extends Model
@@ -21,6 +22,14 @@ class File extends Model
             'ref_count' => 'integer',
             'verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The 512 px WebP made by the file.thumbnail job, once it exists.
+     */
+    public function thumb(): HasOne
+    {
+        return $this->hasOne(FileDerivative::class, 'source_file_id')->where('kind', 'thumb');
     }
 
     /**

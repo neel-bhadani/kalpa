@@ -1,6 +1,8 @@
 <?php
 
 use App\Actions\ExpireStaleUploads;
+use App\Actions\MarkStaleWorkersOffline;
+use App\Actions\RequeueExpiredJobs;
 use App\Core\Modules\ModuleRegistry;
 use App\Core\Storage\ObjectStorage;
 use Illuminate\Foundation\Inspiring;
@@ -30,9 +32,22 @@ Artisan::command('kalpa:storage-setup', function () {
     }
 })->purpose('Create the object storage buckets');
 
-// Abort uploads nobody finished. Needs a scheduler runner (added with Horizon in P0 step 7).
+// Abort uploads nobody finished.
 Artisan::command('uploads:expire', function () {
     $this->line('Expired '.app(ExpireStaleUploads::class)->handle().' upload(s).');
 })->purpose('Abort stale multipart uploads');
 
 Schedule::command('uploads:expire')->hourly();
+
+// Jobs whose worker went quiet go back to the queue (or fail after max_attempts).
+Artisan::command('jobs:requeue-expired', function () {
+    [$requeued, $failed] = app(RequeueExpiredJobs::class)->handle();
+    $this->line("Requeued {$requeued} job(s), failed {$failed}.");
+})->purpose('Requeue jobs whose lease expired');
+
+Artisan::command('workers:mark-offline', function () {
+    $this->line('Marked '.app(MarkStaleWorkersOffline::class)->handle().' worker(s) offline.');
+})->purpose('Mark workers without recent heartbeats offline');
+
+Schedule::command('jobs:requeue-expired')->everyMinute();
+Schedule::command('workers:mark-offline')->everyMinute();

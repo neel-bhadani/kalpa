@@ -1,6 +1,6 @@
 # Kalpa Studio
 
-An all-in-one AI creative studio: story and script, characters (2D, 3D, realistic), 3D assets, voice, music and songs, video editing and upscaling, ads, a player, and import/export. Each module works alone or together through AI assistants. Web first, then desktop (Tauri), then mobile (Capacitor), all on one shared core.
+An all-in-one AI creative studio: story and script, characters (2D, 3D, realistic), 3D assets, CGI and VFX, voice, music and songs, video editing and upscaling, ads, a player, and import/export. Each module works alone or together through AI assistants. Web first, then desktop (Tauri), then mobile (Capacitor), all on one shared core.
 
 Full design: https://claude.ai/code/artifact/10ea28ab-05fa-4f70-ac42-2c36fb1f9d0a
 
@@ -10,7 +10,7 @@ Design summary (modules, tables, phases): docs/design-summary.md — read it whe
 
 - **Zero budget.** Only open-source tools, models and data whose licence allows commercial use. Record every model, asset and dataset in `docs/licences.md`. Never use MusicGen weights, F5-TTS or XTTS (non-commercial).
 - **Device first.** Heavy work runs on the user's device (browser WebGL2/WebGPU/WASM, Web Workers) or on a local worker the user runs. The server stores, syncs, queues and does small conversions. It never needs a GPU.
-- **One core, many modules.** Core = accounts, projects, tasks, assets, files, jobs, sync, AI runtime. Each module (story, character, assets3d, voice, music, video, ads, player, io) plugs in through one manifest. The core never imports module code directly.
+- **One core, many modules.** Core = accounts, projects, tasks, assets, files, jobs, sync, AI runtime. Each module (story, character, assets3d, cgi, voice, music, video, ads, player, io) plugs in through one manifest. The core never imports module code directly.
 - **Everything is an asset.** One `assets` table for every kind, with append-only `asset_versions` (spec as jsonb, changes as JSON Patch) and content-addressed `files` (SHA-256).
 - **AI decides, code builds.** Assistants call the same module commands the UI uses. Every AI action is an `ai_steps` row the user can see, edit and undo.
 - **Nothing lost.** Editors save checkpoints locally (IndexedDB) and sync in the background. Every task resumes where it stopped.
@@ -46,7 +46,7 @@ kalpa/
 │   ├── schemas/      JSON Schemas per asset kind + generated types
 │   ├── ai-runtime/   assistant loop, tools, steps, providers
 │   ├── ui/           shared Vue components and design tokens
-│   └── modules/      story/ character/ assets3d/ voice/ music/ video/ ads/ player/ io/
+│   └── modules/      story/ character/ assets3d/ cgi/ voice/ music/ video/ ads/ player/ io/
 └── docs/             ADRs, licences.md, credits.md
 ```
 
@@ -82,7 +82,7 @@ Services are prefixed `kalpa-`. Local URL: `http://localhost:8089`.
 
 ## Phases
 
-P0 Core platform (current) → P1 Story & Script + AI runtime → P2 Character → P3 Voice + local worker → P4 3D Assets + Import/Export → P5 Music → P6 Video + Player → P7 Ads → P8 Desktop → P9 Mobile.
+P0 Core platform (current) → P1 Story & Script + AI runtime → P2 Character → P3 Voice + local worker → P4 3D Assets + Import/Export → P5 Music → P6 Video + Player → P7 CGI & VFX → P8 Ads → P9 Desktop → P10 Mobile.
 
 ### P0 steps
 

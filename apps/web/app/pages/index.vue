@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { findModule } from '@kalpa/core'
-import type { CursorPage, Dashboard, Project, Task, TaskStatus } from '~/types/api'
+import type { CursorPage, Dashboard, Project, Task, TaskStatus, TaskUpdate } from '~/types/api'
 
 const api = useApi()
 const modules = useModulesStore()
@@ -53,6 +53,32 @@ function onCreated(task: Task) {
 }
 
 watch(filters, () => load())
+
+// Live: every task shown listens on its project's channel. Progress and titles are patched in place;
+// a status change reloads (counts, the continue cards and the filters may all change).
+const liveProjects = computed(() => [...new Set([...tasks.value, ...continueTasks.value].map(task => `project.${task.project_id}`))])
+let reloadTimer: ReturnType<typeof setTimeout> | undefined
+
+useLiveEvents(() => liveProjects.value, 'TaskUpdated', (update: TaskUpdate) => {
+  let statusChanged = update.deleted
+  for (const task of [...tasks.value, ...continueTasks.value]) {
+    if (task.id !== update.id) continue
+    statusChanged ||= task.status !== update.status
+    Object.assign(task, {
+      title: update.title,
+      status: update.status,
+      allowed_transitions: update.allowed_transitions,
+      mode: update.mode,
+      progress: update.progress,
+      has_unsynced_changes: update.has_unsynced_changes,
+      updated_at: update.updated_at,
+    })
+  }
+  if (statusChanged) {
+    clearTimeout(reloadTimer)
+    reloadTimer = setTimeout(() => load(), 300)
+  }
+})
 
 await Promise.all([load(), loadProjects()])
 </script>

@@ -310,7 +310,8 @@ it('lists asset kinds per module', function () {
 
     actingIn($ada, workspaceOf($ada))->getJson('/api/v1/modules')
         ->assertJsonPath('data.0.asset_kinds', [['key' => 'story', 'label' => 'Story'], ['key' => 'script', 'label' => 'Script']])
-        ->assertJsonPath('data.7.asset_kinds', []);
+        ->assertJsonPath('data.3.asset_kinds', [['key' => 'scene', 'label' => 'Scene'], ['key' => 'vfx_shot', 'label' => 'VFX shot']])
+        ->assertJsonPath('data.8.asset_kinds', []);
 });
 
 it('rejects an asset kind claimed by two owners', function () {

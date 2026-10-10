@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Core\Storage\ObjectStorage;
+use App\Enums\JobPriority;
 use App\Enums\UploadStatus;
 use App\Models\File;
 use App\Models\Upload;
@@ -12,7 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class CompleteUpload
 {
-    public function __construct(private ObjectStorage $storage) {}
+    public function __construct(
+        private ObjectStorage $storage,
+        private CreateJob $createJob,
+    ) {}
 
     /**
      * Join the parts into one object and record the file. The hash is checked later (P0 step 7).
@@ -55,6 +59,7 @@ class CompleteUpload
 
             if ($upload->isTemporary()) {
                 $upload->update(['status' => UploadStatus::Completed]);
+                $this->verify($upload);
 
                 return null;
             }
@@ -71,9 +76,25 @@ class CompleteUpload
             );
 
             $upload->update(['status' => UploadStatus::Completed, 'file_id' => $file->id]);
+            $this->verify($upload);
 
             return $file;
         });
+    }
+
+    /**
+     * Re-hash the stored bytes on the server (file.verify_hash), once per upload.
+     */
+    private function verify(Upload $upload): void
+    {
+        $this->createJob->handle(
+            $upload->workspace_id,
+            $upload->user,
+            'file.verify_hash',
+            input: ['upload_id' => $upload->id],
+            priority: JobPriority::Background,
+            idempotencyKey: "file.verify_hash:{$upload->id}",
+        );
     }
 
     /**

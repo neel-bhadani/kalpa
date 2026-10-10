@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ActorType;
+use App\Events\AssetVersionCreated;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,11 @@ class AssetVersion extends Model
             'patch' => 'object',
             'created_by_type' => ActorType::class,
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::created(fn (AssetVersion $version) => AssetVersionCreated::dispatch($version));
     }
 
     public function asset(): BelongsTo

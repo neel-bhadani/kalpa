@@ -40,4 +40,9 @@ class Manifest implements ModuleManifest
             'voice_profile' => 'Voice profile',
         ];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

@@ -19,6 +19,10 @@ Open http://localhost:8089 (or the `KALPA_HTTP_PORT` you set in `.env`).
 File storage is SeaweedFS (S3) behind the same address: the `kalpa` bucket is served at `/kalpa/*`,
 so presigned URLs work from the browser without CORS. The api container creates the `kalpa` and
 `kalpa-test` buckets when it starts (`php artisan kalpa:storage-setup`).
+
+Background work runs in `kalpa-horizon` (Laravel queue), `kalpa-scheduler` (scheduled commands) and
+`kalpa-reverb` (websockets, at `/app/*` on the same address). The Horizon dashboard is at `/horizon`
+(local environment, workspace owners only). Set your own `REVERB_APP_*` values in `.env`.
 The page shows green or red for app, db and redis. API health: `GET /api/v1/health`.
 
 ## Make targets

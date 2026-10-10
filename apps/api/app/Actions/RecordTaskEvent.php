@@ -13,13 +13,14 @@ class RecordTaskEvent
 {
     /**
      * Append one entry to the task's history. Call inside the same transaction as the change.
+     * A null actor means the system (e.g. a job finishing).
      *
      * @param  array<string, mixed>  $data
      */
     public function handle(
         Task $task,
         TaskEventType $type,
-        User $actor,
+        ?User $actor,
         array $data = [],
         ?TaskStatus $from = null,
         ?TaskStatus $to = null,
@@ -30,9 +31,9 @@ class RecordTaskEvent
             'type' => $type,
             'from_status' => $from,
             'to_status' => $to,
-            // Assistants and the system act through later steps (P0 step 9).
-            'actor_type' => ActorType::User,
-            'actor_id' => $actor->id,
+            // Assistants act through later steps (P0 step 9).
+            'actor_type' => $actor ? ActorType::User : ActorType::System,
+            'actor_id' => $actor?->id,
             'data' => (object) $data,
         ]);
     }

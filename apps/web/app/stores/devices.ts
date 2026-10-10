@@ -15,7 +15,7 @@ export type Device = {
 const CLIENT_ID_KEY = 'kalpa.client_id'
 
 // One id per browser, made once and kept in localStorage.
-function clientId(): string {
+export function clientId(): string {
   let id = localStorage.getItem(CLIENT_ID_KEY)
   if (!id) {
     id = crypto.randomUUID()

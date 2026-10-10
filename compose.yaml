@@ -1,5 +1,16 @@
 name: kalpa
 
+# Settings shared by every container that runs the Laravel app (api, horizon, scheduler, reverb).
+x-laravel-env: &laravel-env
+  BROADCAST_CONNECTION: reverb
+  REVERB_APP_ID: ${REVERB_APP_ID:-kalpa}
+  REVERB_APP_KEY: ${REVERB_APP_KEY:-change-me-key}
+  REVERB_APP_SECRET: ${REVERB_APP_SECRET:-change-me-secret}
+  # Laravel publishes events to Reverb inside the Docker network.
+  REVERB_HOST: reverb
+  REVERB_PORT: 8080
+  REVERB_SCHEME: http
+
 services:
   postgres:
     image: postgres:18-alpine
@@ -75,6 +86,7 @@ services:
         GID: ${GID:-1000}
     image: kalpa-api:dev
     container_name: kalpa-api
+    environment: *laravel-env
     # Install PHP packages on first start (fresh clone), make sure the storage buckets exist,
     # then serve /app/public.
     command: ["sh", "-c", "[ -d vendor ] || composer install; php artisan kalpa:storage-setup || echo 'storage setup failed'; exec frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile"]
@@ -92,6 +104,65 @@ services:
     mem_limit: 512m
     restart: unless-stopped
 
+  # Queue workers (Laravel Horizon): server jobs and broadcast events.
+  horizon:
+    image: kalpa-api:dev
+    container_name: kalpa-horizon
+    command: ["php", "artisan", "horizon"]
+    environment: *laravel-env
+    volumes:
+      - ./apps/api:/app
+      - ./packages/schemas:/schemas:ro
+    depends_on:
+      api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "php", "artisan", "horizon:status"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+    mem_limit: 256m
+    restart: unless-stopped
+
+  # Runs scheduled commands (uploads:expire, jobs:requeue-expired, workers:mark-offline).
+  # No healthcheck of its own: schedule:work has no status command.
+  scheduler:
+    image: kalpa-api:dev
+    container_name: kalpa-scheduler
+    command: ["php", "artisan", "schedule:work"]
+    environment: *laravel-env
+    # The image's own healthcheck checks the web server, which this container doesn't run.
+    healthcheck:
+      disable: true
+    volumes:
+      - ./apps/api:/app
+      - ./packages/schemas:/schemas:ro
+    depends_on:
+      api:
+        condition: service_started
+    mem_limit: 128m
+    restart: unless-stopped
+
+  # Websockets for live updates. Browsers reach it through Caddy at /app/*.
+  reverb:
+    image: kalpa-api:dev
+    container_name: kalpa-reverb
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    environment: *laravel-env
+    volumes:
+      - ./apps/api:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 8080) ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 128m
+    restart: unless-stopped
+
   web:
     image: node:24-alpine
     container_name: kalpa-web
@@ -103,6 +174,8 @@ services:
     environment:
       HOME: /tmp
       NODE_OPTIONS: --max-old-space-size=768
+      # Public websocket key for laravel-echo (the secret stays server-side).
+      NUXT_PUBLIC_REVERB_KEY: ${REVERB_APP_KEY:-change-me-key}
       NUXT_TELEMETRY_DISABLED: 1
     volumes:
       - ./apps/web:/kalpa/apps/web
@@ -122,7 +195,8 @@ services:
       - api
       - web
       - seaweedfs
-    mem_limit: 64m
+      - reverb
+    mem_limit: 128m
     restart: unless-stopped
 
 volumes:

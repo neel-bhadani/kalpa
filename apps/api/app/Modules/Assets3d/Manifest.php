@@ -42,4 +42,9 @@ class Manifest implements ModuleManifest
             'material' => 'Material',
         ];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }

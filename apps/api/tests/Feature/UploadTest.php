@@ -6,41 +6,13 @@ use App\Enums\WorkspaceRole;
 use App\Models\File;
 use App\Models\Upload;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
-// These tests talk to the real kalpa-test bucket, with the smallest parts S3 allows (5 MB).
-const PART = 5 * 1024 * 1024;
-
+// These tests talk to the real kalpa-test bucket, with the smallest parts S3 allows (PART, in Pest.php).
 beforeEach(function () {
     config(['uploads.part_size' => PART]);
 });
-
-function startUpload(string $bytes, string $name = 'clip.mp4', string $mime = 'video/mp4'): array
-{
-    return [
-        'file_name' => $name,
-        'size_bytes' => strlen($bytes),
-        'mime' => $mime,
-        'sha256' => hash('sha256', $bytes),
-    ];
-}
-
-// Presign the parts, PUT each slice to storage and return [{number, etag}].
-function putParts(string $uploadId, string $bytes, int $partSize = PART): array
-{
-    $numbers = range(1, (int) ceil(strlen($bytes) / $partSize));
-    $urls = test()->postJson("/api/v1/uploads/{$uploadId}/parts", ['part_numbers' => $numbers])
-        ->assertOk()
-        ->json('data.urls');
-
-    return array_map(function (array $part) use ($bytes, $partSize) {
-        $response = Http::withBody(substr($bytes, ($part['number'] - 1) * $partSize, $partSize), 'application/octet-stream')
-            ->put($part['url'])
-            ->throw();
-
-        return ['number' => $part['number'], 'etag' => trim($response->header('ETag'), '"')];
-    }, $urls);
-}
 
 it('uploads in parts and records the file', function () {
     $ada = owner();
@@ -182,6 +154,8 @@ it('rejects a disallowed type or an oversized file', function () {
 });
 
 it("only dedupes to a file that is verified or the user's own", function () {
+    // Hold the file.verify_hash jobs, so Ada's file stays unverified for this test.
+    Queue::fake();
     $ada = owner();
     $workspace = workspaceOf($ada);
     $bob = memberOf($workspace, WorkspaceRole::Editor);

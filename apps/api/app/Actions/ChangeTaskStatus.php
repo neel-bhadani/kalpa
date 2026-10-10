@@ -15,12 +15,15 @@ class ChangeTaskStatus
 
     /**
      * Move the task to a new status if TaskStatus allows it, and record the move.
+     * A null user means the system moved it (e.g. a job finished); $data goes into the event.
+     *
+     * @param  array<string, mixed>  $data
      *
      * @throws ValidationException when the move is not allowed
      */
-    public function handle(Task $task, TaskStatus $to, User $user): Task
+    public function handle(Task $task, TaskStatus $to, ?User $user, array $data = []): Task
     {
-        return DB::transaction(function () use ($task, $to, $user) {
+        return DB::transaction(function () use ($task, $to, $user, $data) {
             $task = Task::whereKey($task->id)->lockForUpdate()->firstOrFail();
             $from = $task->status;
 
@@ -45,7 +48,7 @@ class ChangeTaskStatus
             $task->row_version++;
             $task->save();
 
-            $this->recordEvent->handle($task, TaskEventType::StatusChanged, $user, from: $from, to: $to);
+            $this->recordEvent->handle($task, TaskEventType::StatusChanged, $user, $data, from: $from, to: $to);
 
             return $task;
         });

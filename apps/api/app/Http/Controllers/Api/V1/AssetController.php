@@ -41,7 +41,7 @@ class AssetController extends Controller
             ->when($request->query('project'), fn ($query, $id) => $query->whereHas('projectAssets', fn ($q) => $q->where('project_id', $id)))
             ->when($request->query('tag'), fn ($query, $tag) => $query->whereRaw('tags @> ARRAY[?]::text[]', [$tag]))
             ->when($this->searchQuery((string) $request->query('q')), fn ($query, $tsquery) => $query->whereRaw("search @@ to_tsquery('simple', ?)", [$tsquery]))
-            ->with('currentVersion.assetFiles.file')
+            ->with('currentVersion.assetFiles.file.thumb.file')
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->cursorPaginate($this->perPage($request));
@@ -109,7 +109,7 @@ class AssetController extends Controller
 
     private function loadDetail(Asset $asset): Asset
     {
-        return $asset->load(['currentVersion.assetFiles.file', 'projectAssets.project']);
+        return $asset->load(['currentVersion.assetFiles.file.thumb.file', 'projectAssets.project']);
     }
 
     /**

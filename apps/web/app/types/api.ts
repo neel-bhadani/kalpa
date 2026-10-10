@@ -121,3 +121,38 @@ export type ProjectAsset = {
   pinned_version: { id: string; number: number } | null
   role: string | null
 }
+
+export type JobStatus = 'queued' | 'assigned' | 'running' | 'paused' | 'succeeded' | 'failed' | 'cancelled'
+
+export type Job = {
+  id: string
+  type: string
+  target: 'device' | 'worker' | 'server'
+  status: JobStatus
+  priority: string
+  progress: number
+  task_id: string | null
+  task_title?: string | null
+  worker?: { id: string; name: string; kind: string } | null
+  error: string | null
+  attempts: number
+  max_attempts: number
+  queued_at: string | null
+  finished_at: string | null
+  created_at: string
+}
+
+export type Worker = {
+  id: string
+  kind: 'browser' | 'local' | 'desktop' | 'pool'
+  name: string
+  status: 'online' | 'offline' | 'disabled'
+  capabilities: string[]
+  last_heartbeat_at: string | null
+}
+
+// What TaskUpdated sends over the websocket.
+export type TaskUpdate = Pick<Task, 'id' | 'project_id' | 'title' | 'status' | 'allowed_transitions' | 'mode' | 'progress' | 'has_unsynced_changes' | 'row_version' | 'updated_at'> & { deleted: boolean }
+
+// What JobUpdated sends over the websocket.
+export type JobUpdate = Pick<Job, 'id' | 'type' | 'target' | 'status' | 'progress' | 'task_id' | 'error'> & { worker_id: string | null }

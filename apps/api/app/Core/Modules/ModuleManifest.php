@@ -33,4 +33,12 @@ interface ModuleManifest
      * @return array<string, string>
      */
     public function assetKinds(): array;
+
+    /**
+     * Job types this module runs: key ("<module>.<name>") => ['targets' => [...], 'capability' => ?string].
+     * targets: device, worker and/or server. capability: what a worker must report to claim it (e.g. "gpu").
+     *
+     * @return array<string, array{targets: list<string>, capability: ?string}>
+     */
+    public function jobTypes(): array;
 }

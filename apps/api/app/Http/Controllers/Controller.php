@@ -23,6 +23,9 @@ abstract class Controller
      */
     protected function jsonBody(Request $request): object
     {
-        return json_decode($request->getContent() ?: '{}', false, 512, JSON_THROW_ON_ERROR) ?? new stdClass;
+        $body = json_decode($request->getContent() ?: '{}', false, 512, JSON_THROW_ON_ERROR);
+
+        // An empty body can arrive as [] (a JSON list); treat anything but an object as no fields.
+        return is_object($body) ? $body : new stdClass;
     }
 }

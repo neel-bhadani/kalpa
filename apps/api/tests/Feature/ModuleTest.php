@@ -4,10 +4,10 @@ use App\Core\Modules\ModuleManifest;
 use App\Core\Modules\ModuleRegistry;
 use App\Enums\WorkspaceRole;
 
-it('loads the nine modules in order', function () {
+it('loads the ten modules in order', function () {
     $modules = app(ModuleRegistry::class)->all();
 
-    expect(array_keys($modules))->toBe(['story', 'character', 'assets3d', 'voice', 'music', 'video', 'ads', 'player', 'io'])
+    expect(array_keys($modules))->toBe(['story', 'character', 'assets3d', 'cgi', 'voice', 'music', 'video', 'ads', 'player', 'io'])
         ->and($modules)->each->toBeInstanceOf(ModuleManifest::class)
         ->and($modules['video']->taskKinds())->toHaveKeys(['create_video', 'edit_video', 'upscale_video'])
         ->and(app(ModuleRegistry::class)->find('nope'))->toBeNull();
@@ -18,7 +18,7 @@ it('lists modules with their enabled state', function () {
 
     actingIn($ada, workspaceOf($ada))->getJson('/api/v1/modules')
         ->assertOk()
-        ->assertJsonCount(9, 'data')
+        ->assertJsonCount(10, 'data')
         ->assertJsonPath('data.0.key', 'story')
         ->assertJsonPath('data.0.name', 'Story & Script')
         ->assertJsonPath('data.0.icon', 'book-open')
@@ -36,7 +36,7 @@ it('lets only the owner turn a module on or off', function () {
     actingIn($ada, $workspace)->patchJson('/api/v1/modules/music', ['enabled' => false])
         ->assertOk()
         ->assertJsonPath('data.enabled', false);
-    actingIn($ada, $workspace)->getJson('/api/v1/modules')->assertJsonPath('data.4.enabled', false);
+    actingIn($ada, $workspace)->getJson('/api/v1/modules')->assertJsonPath('data.5.enabled', false);
 
     actingIn($ada, $workspace)->patchJson('/api/v1/modules/music', ['enabled' => true])->assertJsonPath('data.enabled', true);
     actingIn($ada, $workspace)->patchJson('/api/v1/modules/nope', ['enabled' => false])->assertNotFound();

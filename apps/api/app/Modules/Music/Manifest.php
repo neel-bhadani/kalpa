@@ -40,4 +40,9 @@ class Manifest implements ModuleManifest
             'composition' => 'Composition',
         ];
     }
+
+    public function jobTypes(): array
+    {
+        return [];
+    }
 }
