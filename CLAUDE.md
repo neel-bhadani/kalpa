@@ -4,6 +4,8 @@ An all-in-one AI creative studio: story and script, characters (2D, 3D, realisti
 
 Full design: https://claude.ai/code/artifact/10ea28ab-05fa-4f70-ac42-2c36fb1f9d0a
 
+Design summary (modules, tables, phases): docs/design-summary.md — read it when a step touches a module, table or phase you don't know yet.
+
 ## Core ideas
 
 - **Zero budget.** Only open-source tools, models and data whose licence allows commercial use. Record every model, asset and dataset in `docs/licences.md`. Never use MusicGen weights, F5-TTS or XTTS (non-commercial).
