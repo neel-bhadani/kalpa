@@ -112,6 +112,16 @@ it('starts a session with the task module assistant and records messages', funct
     actingIn($ada, $workspace)->getJson("/api/v1/tasks/{$task->id}/ai/sessions")->assertJsonCount(1, 'data');
 });
 
+it('gives a second device the task\'s active session instead of a new one', function () {
+    // Two devices open a new task at once: both ask to start a session.
+    [$ada, $workspace, $task, $session] = aiSession();
+
+    actingIn($ada, $workspace)->postJson("/api/v1/tasks/{$task->id}/ai/sessions")
+        ->assertOk()
+        ->assertJsonPath('data.id', $session);
+    actingIn($ada, $workspace)->getJson("/api/v1/tasks/{$task->id}/ai/sessions")->assertJsonCount(1, 'data');
+});
+
 it('does not let messages be changed or removed', function () {
     [$ada, $workspace, , $session] = aiSession();
     actingIn($ada, $workspace)->postJson("/api/v1/ai/sessions/{$session}/messages", ['role' => 'user', 'content' => ['text' => 'hi']]);

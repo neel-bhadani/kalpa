@@ -48,12 +48,18 @@ export function api(context: BrowserContext) {
 
   async function call<T = any>(method: string, path: string, body?: unknown): Promise<{ status: number; data: T }> {
     const xsrf = (await context.cookies()).find(cookie => cookie.name === 'XSRF-TOKEN')?.value
-    if (!workspaceId && path !== '/api/v1/me') workspaceId = (await call('GET', '/api/v1/me')).data.data.workspaces[0].id
+    if (!workspaceId && path !== '/api/v1/me') {
+      const me = await call('GET', '/api/v1/me')
+      if (!me.data?.data?.workspaces) throw new Error(`GET /api/v1/me: ${me.status}`)
+      workspaceId = me.data.data.workspaces[0].id
+    }
     const response = await context.request.fetch(path, {
       method,
       data: body,
       headers: {
         'Accept': 'application/json',
+        // Sanctum uses the session cookie only for requests from the app's own origin.
+        'Referer': `${process.env.KALPA_URL ?? 'http://localhost:8089'}/`,
         ...(xsrf ? { 'X-XSRF-TOKEN': decodeURIComponent(xsrf) } : {}),
         ...(workspaceId ? { 'X-Workspace-Id': workspaceId } : {}),
       },

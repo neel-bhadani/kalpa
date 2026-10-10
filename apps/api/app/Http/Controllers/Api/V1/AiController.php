@@ -52,7 +52,8 @@ class AiController extends Controller
 
         $session = $start->handle($task, $request->user(), TaskMode::tryFrom($data['mode'] ?? ''), $data['brain_model_key'] ?? 'fake-brain');
 
-        return (new AiSessionResource($session))->response()->setStatusCode(201);
+        // 201 for a new session, 200 when the task's active session already existed.
+        return (new AiSessionResource($session))->response()->setStatusCode($session->wasRecentlyCreated ? 201 : 200);
     }
 
     public function show(AiSession $session): AiSessionResource

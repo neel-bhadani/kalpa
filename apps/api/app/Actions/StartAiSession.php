@@ -22,6 +22,8 @@ class StartAiSession
 
     /**
      * Open a conversation with the task module's assistant (the Producer for modules without one).
+     * A task has one active session: if it already has one (e.g. another device opened the task at
+     * the same moment), that one is returned instead.
      *
      * @throws ValidationException when the brain model isn't a registered, enabled LLM
      */
@@ -34,6 +36,13 @@ class StartAiSession
         }
 
         return DB::transaction(function () use ($task, $user, $mode, $model) {
+            // Lock the task so two devices starting at once can't both create a session.
+            Task::whereKey($task->id)->lockForUpdate()->first();
+            $active = AiSession::where('task_id', $task->id)->where('status', AiSessionStatus::Active)->first();
+            if ($active !== null) {
+                return $active;
+            }
+
             $session = AiSession::create([
                 'workspace_id' => $task->workspace_id,
                 'project_id' => $task->project_id,

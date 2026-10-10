@@ -9,7 +9,7 @@ test('a viewer can look but not change anything', async ({ browser }) => {
   await expect(page.getByText(task.title).first()).toBeVisible()
   await expect(page.getByTestId('notes')).toHaveAttribute('readonly', '')
   await expect(page.getByTestId('read-only')).toBeVisible()
-  await page.getByTestId('toggle-assistant').click()
+  // The assistant panel is open by default; a viewer gets no input box.
   await expect(page.getByTestId('assistant')).toBeVisible()
   await expect(page.getByTestId('assistant-input')).toHaveCount(0)
 

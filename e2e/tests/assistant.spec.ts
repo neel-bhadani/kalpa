@@ -1,6 +1,13 @@
 import { expect, test, type Page } from '@playwright/test'
 import { device, fixtures, newTask, notes } from './helpers'
 
+// Pick a mode once the session has loaded (the switch does nothing before that).
+async function mode(page: Page, key: 'auto' | 'semi' | 'manual') {
+  await expect(page.locator('[role="radio"][aria-checked="true"]')).toHaveCount(1)
+  await page.getByTestId(`mode-${key}`).click()
+  await expect(page.getByTestId(`mode-${key}`)).toHaveAttribute('aria-checked', 'true')
+}
+
 async function ask(page: Page, text: string) {
   await page.getByTestId('assistant-input').fill(text)
   await page.getByTestId('send').click()
@@ -15,7 +22,7 @@ test('the assistant: Semi waits for approval and can undo; Auto runs alone', asy
   const steps = a.page.getByTestId('step')
 
   // Semi: three steps wait for review (and show up on the other device too).
-  await a.page.getByTestId('mode-semi').click()
+  await mode(a.page, 'semi')
   await ask(a.page, 'demo')
   await expect(steps).toHaveCount(3)
   await expect(a.page.getByTestId('step-status')).toHaveText(['awaiting review', 'awaiting review', 'awaiting review'])
@@ -37,7 +44,7 @@ test('the assistant: Semi waits for approval and can undo; Auto runs alone', asy
   await expect(notes(a.page)).not.toHaveValue(/Scene 2/)
 
   // Auto: it runs on its own, one step at a time.
-  await a.page.getByTestId('mode-auto').click()
+  await mode(a.page, 'auto')
   await ask(a.page, 'demo')
   let mostRunning = 0
   for (let i = 0; i < 60; i++) {
