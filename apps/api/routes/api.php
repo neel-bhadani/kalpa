@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProjectAssetController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectMemoryController;
+use App\Http\Controllers\Api\V1\SyncController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaskDependencyController;
 use App\Http\Controllers\Api\V1\TaskOutputController;
@@ -54,6 +55,10 @@ Route::middleware(['auth:sanctum', 'workspace'])->group(function () {
     Route::patch('/modules/{key}', [ModuleController::class, 'update']);
 
     Route::get('/dashboard', DashboardController::class);
+
+    Route::get('/sync', [SyncController::class, 'pull']);
+    Route::post('/sync', [SyncController::class, 'push']);
+    Route::post('/sync/unsynced', [SyncController::class, 'unsynced']);
 
     Route::whereUuid(['job', 'worker'])->group(function () {
         Route::get('/jobs', [JobController::class, 'index']);

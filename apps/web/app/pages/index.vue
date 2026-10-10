@@ -3,6 +3,7 @@ import { findModule } from '@kalpa/core'
 import type { CursorPage, Dashboard, Project, Task, TaskStatus, TaskUpdate } from '~/types/api'
 
 const api = useApi()
+const sync = useSyncStore()
 const modules = useModulesStore()
 const errors = useFormErrors()
 
@@ -13,6 +14,7 @@ const tasks = ref<Task[]>([])
 const nextCursor = ref<string | null>(null)
 const loading = ref(true)
 const showNewTask = ref(false)
+const offline = ref(false)
 
 // Filters: one module, one status chip (which may cover several statuses), one project.
 const filters = reactive({ module: '', status: '', project: '' })
@@ -32,15 +34,43 @@ async function load(cursor: string | null = null) {
     counts.value = page.data.counts
     tasks.value = cursor ? [...tasks.value, ...page.data.tasks] : page.data.tasks
     nextCursor.value = page.meta.next_cursor
+    offline.value = false
   } catch (error) {
-    errors.show(error)
+    if (isNetworkError(error)) await loadFromCache()
+    else errors.show(error)
   } finally {
     loading.value = false
   }
 }
 
+// Offline: the same view, built from the tasks and projects this device keeps.
+async function loadFromCache() {
+  const client = await sync.ready()
+  const [cachedTasks, cachedProjects] = await Promise.all([client.listEntities('task'), client.listEntities('project')])
+  const projectNames = new Map(cachedProjects.map(project => [project.id, project.data.name as string]))
+  const statuses = filters.status ? filters.status.split(',') : null
+
+  const all = cachedTasks
+    .map(record => ({ ...(record.data as Task), project_name: projectNames.get(record.data.project_id) }))
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+  const filtered = all.filter(task => (!filters.module || task.module === filters.module)
+    && (!filters.project || task.project_id === filters.project))
+
+  counts.value = Object.fromEntries(statusFilters.flatMap(filter => filter.statuses)
+    .map(status => [status, filtered.filter(task => task.status === status).length]))
+  tasks.value = filtered.filter(task => statuses ? statuses.includes(task.status) : task.status !== 'archived')
+  continueTasks.value = all.filter(task => !['completed', 'archived'].includes(task.status)).slice(0, 3)
+  nextCursor.value = null
+  if (!projects.value.length) projects.value = cachedProjects.map(project => project.data as Project)
+  offline.value = true
+}
+
 async function loadProjects() {
-  projects.value = (await api<CursorPage<Project>>('/api/v1/projects', { query: { per_page: 100 } })).data
+  try {
+    projects.value = (await api<CursorPage<Project>>('/api/v1/projects', { query: { per_page: 100 } })).data
+  } catch (error) {
+    if (!isNetworkError(error)) throw error
+  }
 }
 
 function countFor(statuses: TaskStatus[]): number {
@@ -86,6 +116,9 @@ await Promise.all([load(), loadProjects()])
 <template>
   <main class="mx-auto max-w-5xl p-6">
     <p v-if="errors.message.value" class="mb-4 text-sm text-red-400">{{ errors.message.value }}</p>
+    <p v-if="offline" class="mb-4 rounded-lg bg-amber-400/10 px-3 py-2 text-sm text-amber-300" data-test="offline-note">
+      You're offline. This is the copy kept on this device; edits are sent when you're back online.
+    </p>
 
     <!-- Empty state: nothing to work on until there's a project. -->
     <section v-if="!loading && projects.length === 0" class="rounded-xl bg-panel p-10 text-center">
@@ -114,7 +147,7 @@ await Promise.all([load(), loadProjects()])
             <p class="mt-1 truncate text-sm text-muted">{{ task.project_name }}</p>
             <div class="mt-3 flex items-center justify-between">
               <span class="font-mono text-xs text-muted">{{ timeAgo(task.updated_at) }}</span>
-              <UnsavedChip v-if="task.has_unsynced_changes" />
+              <UnsavedChip v-if="sync.isUnsaved(task)" />
             </div>
           </NuxtLink>
         </div>

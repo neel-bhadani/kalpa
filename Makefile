@@ -1,4 +1,4 @@
-.PHONY: up down logs ps sh-api sh-web test test-api test-web module-keys typecheck fresh
+.PHONY: up down logs ps sh-api sh-web test test-api test-web module-keys typecheck fresh web-preview web-dev
 
 up:
 	docker compose up -d --build
@@ -35,3 +35,10 @@ typecheck:
 
 fresh:
 	docker compose exec api php artisan migrate:fresh
+
+# Build the web app and serve the build (offline app shell, like production). Back with make web-dev.
+web-preview:
+	KALPA_WEB_MODE=preview docker compose up -d web
+
+web-dev:
+	KALPA_WEB_MODE=dev docker compose up -d web

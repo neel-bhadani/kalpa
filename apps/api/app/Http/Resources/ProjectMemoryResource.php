@@ -15,6 +15,7 @@ class ProjectMemoryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'project_id' => $this->project_id,
             'data' => $this->data,
             'row_version' => $this->row_version,

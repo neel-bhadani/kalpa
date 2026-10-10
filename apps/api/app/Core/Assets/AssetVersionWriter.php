@@ -2,6 +2,7 @@
 
 namespace App\Core\Assets;
 
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\ActorType;
 use App\Models\Asset;
 use App\Models\AssetFile;
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
  */
 class AssetVersionWriter
 {
-    public function __construct(private AssetSchemas $schemas) {}
+    public function __construct(
+        private AssetSchemas $schemas,
+        private ChangeRecorder $changes,
+    ) {}
 
     /**
      * @param  list<array{role: string, file_id: string}>  $files
@@ -62,6 +66,9 @@ class AssetVersionWriter
 
         $asset->current_version_id = $version->id;
         $asset->touch();
+
+        $this->changes->upsert($version);
+        $this->changes->upsert($asset);
 
         return $version;
     }

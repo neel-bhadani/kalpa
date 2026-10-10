@@ -34,5 +34,13 @@ The page shows green or red for app, db and redis. API health: `GET /api/v1/heal
 | `make sh-api` / `make sh-web` | Shell in the API / web container |
 | `make test` | Run all tests: Pest (`make test-api`, database `kalpa_test`) and Vitest (`make test-web`) |
 | `make module-keys` | Export the API's module keys to `packages/core/src/module-keys.json` (run by `make test`) |
+| `make web-preview` / `make web-dev` | Serve a built app (works offline after the first visit) / back to the dev server |
 | `make typecheck` | Type-check the web app and the packages it imports |
 | `make fresh` | `migrate:fresh` on the dev database |
+
+## Offline and sync
+
+Tasks, projects and asset metadata are cached per device in IndexedDB, and edits are queued while offline
+(header pill: Synced / Syncing / Offline). To try a second device on this machine, open
+http://127.0.0.1:8089 next to http://localhost:8089: different origins keep separate storage.
+Offline reloads need the built app (`make web-preview`); the dev server can't work offline.

@@ -6,17 +6,39 @@ import type { CursorPage, Job, JobUpdate, Task, TaskUpdate } from '~/types/api'
 
 const route = useRoute()
 const api = useApi()
+const sync = useSyncStore()
 const errors = useFormErrors()
 const taskId = route.params.id as string
 
 const module = findModule(route.params.module as string)
 const task = ref<(Task & Pick<EditorTask, 'outputs'>) | null>(null)
 const jobs = ref<Job[]>([])
+// Opened from the offline cache (the server wasn't reachable).
+const offline = ref(false)
+
+// The checkpoint: notes and view state, kept on this device and synced (see useTaskCheckpoint).
+const checkpoint = useTaskCheckpoint(taskId)
 
 // The module's editor, downloaded only now (its own chunk).
 const Editor = module
   ? defineAsyncComponent(() => module.editor() as Promise<{ default: Component }>)
   : null
+
+async function loadTask() {
+  try {
+    const { data } = await api<{ data: Task }>(`/api/v1/tasks/${taskId}`)
+    task.value = { ...data, outputs: [] }
+    await checkpoint.load(data as Task & { checkpoint: unknown })
+  } catch (error) {
+    if (!isNetworkError(error)) throw error
+    // Offline: the copy this device keeps.
+    const cached = await (await sync.ready()).getEntity('task', taskId)
+    if (!cached) throw error
+    task.value = { ...(cached.data as Task), outputs: [] }
+    offline.value = true
+    await checkpoint.load()
+  }
+}
 
 async function loadOutputs() {
   const outputs = await api<{ data: NonNullable<EditorTask['outputs']> }>(`/api/v1/tasks/${taskId}/outputs`)
@@ -55,16 +77,27 @@ useLiveEvent(() => `task.${taskId}`, 'TaskUpdated', (update: TaskUpdate) => {
 useLiveEvent(() => `task.${taskId}`, 'JobUpdated', (update: JobUpdate) => {
   const known = jobs.value.find(job => job.id === update.id)
   if (known) Object.assign(known, update)
-  else loadJobs()
+  else loadJobs().catch(() => undefined)
 })
-useLiveEvent(() => `task.${taskId}`, 'AssetVersionCreated', () => loadOutputs())
+useLiveEvent(() => `task.${taskId}`, 'AssetVersionCreated', () => loadOutputs().catch(() => undefined))
+
+// Another device saved this task's checkpoint: show it, unless this device has unsent edits
+// (then the next push decides, and a conflict dialog may ask).
+watch(() => sync.lastChanges, (changes) => {
+  const mine = changes.find(change => change.entity === 'task' && change.entity_id === taskId)
+  if (mine && !sync.pendingTaskIds.has(taskId)) void checkpoint.load()
+})
+
+// A conflict for this task was settled ("Use theirs" replaces what's shown).
+watch(() => sync.status.conflicts.some(conflict => conflict.entity_id === taskId), (open, wasOpen) => {
+  if (wasOpen && !open) void checkpoint.load()
+})
 
 const isDev = import.meta.dev
 
 try {
-  const [taskResponse] = await Promise.all([api<{ data: Task }>(`/api/v1/tasks/${taskId}`), loadJobs()])
-  task.value = { ...taskResponse.data, outputs: [] }
-  await loadOutputs()
+  await loadTask()
+  if (!offline.value) await Promise.all([loadOutputs(), loadJobs()]).catch(() => undefined)
 } catch (error) {
   errors.show(error)
 }
@@ -81,9 +114,11 @@ try {
     <template v-if="task">
       <div class="mt-4 flex flex-wrap items-center gap-3">
         <StatusBadge :task="task" data-test="task-status" />
-        <UnsavedChip v-if="task.has_unsynced_changes" />
+        <UnsavedChip v-if="sync.isUnsaved(task)" data-test="unsaved" />
+        <span v-if="offline" class="text-xs text-amber-300">Offline copy</span>
+        <span v-else-if="checkpoint.source.value === 'local'" class="text-xs text-muted">Resumed from this device's unsent edits</span>
         <button
-          v-if="isDev"
+          v-if="isDev && !offline"
           class="ml-auto rounded-lg border border-muted/30 px-3 py-1.5 text-xs hover:border-accent hover:text-accent"
           data-test="run-demo-job"
           @click="runDemoJob"
@@ -101,8 +136,8 @@ try {
         </li>
       </ul>
 
-      <div v-if="Editor" class="mt-4">
-        <component :is="Editor" :task="task" />
+      <div v-if="Editor && checkpoint.ready.value" class="mt-4">
+        <component :is="Editor" :task="task" :checkpoint="checkpoint.checkpoint.value" @update:checkpoint="checkpoint.save" />
       </div>
     </template>
   </main>

@@ -6,6 +6,7 @@ use App\Core\Assets\AssetSchemas;
 use App\Core\Jobs\JobTypeRegistry;
 use App\Core\Modules\ModuleRegistry;
 use App\Core\Storage\ObjectStorage;
+use App\Core\Sync\CurrentDevice;
 use App\Core\Workspaces\CurrentWorkspace;
 use App\Events\NotificationCreated;
 use App\Models\PersonalAccessToken;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // A fresh one per request.
         $this->app->scoped(CurrentWorkspace::class);
+        $this->app->scoped(CurrentDevice::class);
 
         $this->app->singleton(ModuleRegistry::class, fn () => new ModuleRegistry(config('modules.manifests')));
 

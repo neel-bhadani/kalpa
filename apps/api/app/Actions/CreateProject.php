@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\ActorType;
 use App\Models\Project;
 use App\Models\ProjectMemory;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 class CreateProject
 {
+    public function __construct(private ChangeRecorder $changes) {}
+
     /**
      * Create the project with its empty project memory (version 1).
      *
@@ -41,7 +44,11 @@ class CreateProject
                 'created_by_id' => $user->id,
             ]);
 
-            return $project->refresh();
+            $project->refresh();
+            $this->changes->upsert($project);
+            $this->changes->upsert($memory);
+
+            return $project;
         });
     }
 }

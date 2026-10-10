@@ -46,6 +46,9 @@ export const useDevicesStore = defineStore('devices', () => {
 
   const devices = ref<Device[]>([])
   const currentClientId = ref<string | null>(null)
+  // This device on the server (user_devices), once registered.
+  const deviceId = ref<string | null>(localStorage.getItem(DEVICE_ID_KEY))
+  const deviceName = ref<string>(defaultName())
   let registered = false
 
   // Tell the API about this device (or refresh last_seen). Runs once per app start.
@@ -59,7 +62,7 @@ export const useDevicesStore = defineStore('devices', () => {
     currentClientId.value = clientId()
 
     try {
-      await api('/api/v1/devices', {
+      const { data } = await api<{ data: Device }>('/api/v1/devices', {
         method: 'POST',
         body: {
           client_id: currentClientId.value,
@@ -70,6 +73,9 @@ export const useDevicesStore = defineStore('devices', () => {
           tier: computeTier(profile),
         },
       })
+      localStorage.setItem(DEVICE_ID_KEY, data.id)
+      deviceId.value = data.id
+      deviceName.value = data.name
     } catch {
       // Not critical; try again on the next app start.
       registered = false
@@ -99,5 +105,5 @@ export const useDevicesStore = defineStore('devices', () => {
     registered = false
   }
 
-  return { devices, currentClientId, registerCurrent, fetchAll, setTierOverride, remove, reset }
+  return { devices, currentClientId, deviceId, deviceName, registerCurrent, fetchAll, setTierOverride, remove, reset }
 })

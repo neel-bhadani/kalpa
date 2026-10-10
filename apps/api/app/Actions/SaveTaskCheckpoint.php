@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Core\Exceptions\VersionConflict;
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\TaskEventType;
 use App\Models\Task;
 use App\Models\User;
@@ -10,7 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class SaveTaskCheckpoint
 {
-    public function __construct(private RecordTaskEvent $recordEvent) {}
+    public function __construct(
+        private RecordTaskEvent $recordEvent,
+        private ChangeRecorder $changes,
+    ) {}
 
     /**
      * Replace the task's checkpoint, if nobody saved since $baseVersion.
@@ -32,6 +36,7 @@ class SaveTaskCheckpoint
             $task->save();
 
             $this->recordEvent->handle($task, TaskEventType::CheckpointSaved, $user, ['row_version' => $task->row_version]);
+            $this->changes->upsert($task);
 
             return $task;
         });

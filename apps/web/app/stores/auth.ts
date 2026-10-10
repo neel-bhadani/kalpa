@@ -17,6 +17,9 @@ export type Workspace = {
 
 type Profile = { user: User; workspaces: Workspace[] }
 
+// The last profile from /me, so the app still opens offline.
+const PROFILE_KEY = 'kalpa.profile'
+
 export const useAuthStore = defineStore('auth', () => {
   const api = useApi()
 
@@ -40,9 +43,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchMe() {
     try {
-      setProfile((await api<{ data: Profile }>('/api/v1/me')).data)
-    } catch {
-      setProfile(null)
+      const { data } = await api<{ data: Profile }>('/api/v1/me')
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(data))
+      setProfile(data)
+    } catch (error) {
+      // Offline (no answer at all): keep working as the last signed-in user. A 401 means signed out.
+      const cached = localStorage.getItem(PROFILE_KEY)
+      setProfile(isNetworkError(error) && cached ? JSON.parse(cached) : null)
     }
     checked.value = true
   }
@@ -67,9 +74,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     await api('/api/v1/auth/logout', { method: 'POST' })
+    localStorage.removeItem(PROFILE_KEY)
     setProfile(null)
     useDevicesStore().reset()
     useModulesStore().reset()
+    useSyncStore().stop()
     useBrowserWorker().stop()
     useRealtime().disconnect()
   }

@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Core\Exceptions\VersionConflict;
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\ActorType;
 use App\Models\ProjectMemory;
 use App\Models\ProjectMemoryVersion;
@@ -14,6 +15,8 @@ use Swaggest\JsonDiff\JsonPatch;
 
 class PatchProjectMemory
 {
+    public function __construct(private ChangeRecorder $changes) {}
+
     /**
      * Apply RFC 6902 operations made against $baseVersion, and record them as a new version.
      *
@@ -51,6 +54,7 @@ class PatchProjectMemory
                 'created_by_type' => ActorType::User,
                 'created_by_id' => $user->id,
             ]);
+            $this->changes->upsert($memory);
 
             return $memory;
         });

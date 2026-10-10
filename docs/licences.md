@@ -16,3 +16,6 @@ Every model, asset, dataset and third-party library chosen for Kalpa Studio (fra
 | PHP GD extension (with libwebp) | PHP extension in the api image | bundled | PHP-3.01 / libgd (BSD-style), libwebp BSD-3-Clause | Yes | https://www.php.net/manual/en/book.image.php | API: file.thumbnail |
 | laravel-echo | JS library (websocket client for Laravel broadcasting) | 2.6 | MIT | Yes | https://github.com/laravel/echo | Web: live task, job and notification updates |
 | pusher-js | JS library (Pusher protocol client, used by Echo for Reverb) | 8.6 | MIT | Yes | https://github.com/pusher/pusher-js | Web: websocket connection |
+| idb | JS library (promise wrapper for IndexedDB) | 8.0 | ISC | Yes | https://github.com/jakearchibald/idb | Web: offline cache and outbox (packages/core/src/sync) |
+| fake-indexeddb | JS library (IndexedDB for tests; dev only) | 6.2 | Apache-2.0 | Yes | https://github.com/dumbmatter/fakeIndexedDB | Vitest: sync tests |
+| @vite-pwa/nuxt | JS library (service worker / offline app shell; brings vite-plugin-pwa and Workbox, both MIT; build time only) | 1.1 | MIT | Yes | https://github.com/vite-pwa/nuxt | Web: offline app shell |

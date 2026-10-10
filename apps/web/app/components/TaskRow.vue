@@ -4,6 +4,7 @@ import type { Task } from '~/types/api'
 
 // One line of a task list: module, title, status, project and when it last changed.
 const props = defineProps<{ task: Task }>()
+const sync = useSyncStore()
 
 const icon = computed(() => findModule(props.task.module)?.icon ?? 'square')
 </script>
@@ -18,7 +19,7 @@ const icon = computed(() => findModule(props.task.module)?.icon ?? 'square')
       <span class="truncate">{{ task.module_name ?? task.module }} task</span>
     </span>
     <span class="min-w-0 flex-1 truncate">{{ task.title }}</span>
-    <UnsavedChip v-if="task.has_unsynced_changes" />
+    <UnsavedChip v-if="sync.isUnsaved(task)" data-test="unsaved" />
     <StatusBadge :task="task" />
     <span v-if="task.project_name" class="max-w-40 truncate text-sm text-muted">({{ task.project_name }})</span>
     <span class="w-20 shrink-0 text-right font-mono text-xs text-muted">{{ timeAgo(task.updated_at) }}</span>

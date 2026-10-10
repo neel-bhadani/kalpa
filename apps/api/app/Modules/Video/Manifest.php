@@ -18,7 +18,7 @@ class Manifest implements ModuleManifest
 
     public function icon(): string
     {
-        return 'clapperboard';
+        return 'film';
     }
 
     public function version(): string

@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\TaskEventType;
 use App\Enums\TaskStatus;
 use App\Models\Task;
@@ -11,7 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class ChangeTaskStatus
 {
-    public function __construct(private RecordTaskEvent $recordEvent) {}
+    public function __construct(
+        private RecordTaskEvent $recordEvent,
+        private ChangeRecorder $changes,
+    ) {}
 
     /**
      * Move the task to a new status if TaskStatus allows it, and record the move.
@@ -49,6 +53,7 @@ class ChangeTaskStatus
             $task->save();
 
             $this->recordEvent->handle($task, TaskEventType::StatusChanged, $user, $data, from: $from, to: $to);
+            $this->changes->upsert($task);
 
             return $task;
         });

@@ -2,13 +2,17 @@
 
 namespace App\Actions;
 
+use App\Core\Sync\ChangeRecorder;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class DeleteProject
 {
-    public function __construct(private DeleteTask $deleteTask) {}
+    public function __construct(
+        private DeleteTask $deleteTask,
+        private ChangeRecorder $changes,
+    ) {}
 
     /**
      * Soft-delete the project and its tasks (each task records why).
@@ -21,6 +25,7 @@ class DeleteProject
             }
 
             $project->delete();
+            $this->changes->delete($project);
         });
     }
 }

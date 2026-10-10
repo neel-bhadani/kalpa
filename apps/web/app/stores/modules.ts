@@ -4,6 +4,8 @@ import type { ServerModule } from '~/types/api'
 
 // Modules for the current workspace: the client registry (editors, order) joined with
 // what the server says (enabled, task kinds).
+const MODULES_KEY = 'kalpa.modules'
+
 export const useModulesStore = defineStore('modules', () => {
   const api = useApi()
 
@@ -16,7 +18,15 @@ export const useModulesStore = defineStore('modules', () => {
   )
 
   async function load() {
-    server.value = (await api<{ data: ServerModule[] }>('/api/v1/modules')).data
+    try {
+      server.value = (await api<{ data: ServerModule[] }>('/api/v1/modules')).data
+      localStorage.setItem(MODULES_KEY, JSON.stringify(server.value))
+    } catch (error) {
+      // Offline: the last known list, so the sidebar and editors still work.
+      const cached = localStorage.getItem(MODULES_KEY)
+      if (!isNetworkError(error) || !cached) throw error
+      server.value = JSON.parse(cached)
+    }
     loaded.value = true
   }
 

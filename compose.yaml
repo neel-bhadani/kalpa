@@ -169,18 +169,29 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     # Same layout as the repo, so apps/web can import ../../packages/* by path alias.
     working_dir: /kalpa/apps/web
-    # Install npm packages on first start (fresh clone), then run the Nuxt dev server.
-    command: ["sh", "-c", "[ -d node_modules ] || npm ci; exec npm run dev -- --host 0.0.0.0 --port 3000"]
+    # Install npm packages on first start (fresh clone), then run the Nuxt dev server, or in
+    # preview mode (KALPA_WEB_MODE=preview, see make web-preview) build the app and serve the build,
+    # which is what works offline (service worker).
+    command:
+      - sh
+      - -c
+      - |
+        [ -d node_modules ] || npm ci
+        if [ "$$KALPA_WEB_MODE" = preview ]; then
+          npx nuxi generate && exec node scripts/serve-static.mjs
+        fi
+        exec npm run dev -- --host 0.0.0.0 --port 3000
     environment:
       HOME: /tmp
-      NODE_OPTIONS: --max-old-space-size=768
+      NODE_OPTIONS: --max-old-space-size=512
       # Public websocket key for laravel-echo (the secret stays server-side).
       NUXT_PUBLIC_REVERB_KEY: ${REVERB_APP_KEY:-change-me-key}
+      KALPA_WEB_MODE: ${KALPA_WEB_MODE:-dev}
       NUXT_TELEMETRY_DISABLED: 1
     volumes:
       - ./apps/web:/kalpa/apps/web
       - ./packages:/kalpa/packages
-    mem_limit: 1g
+    mem_limit: 768m
     restart: unless-stopped
 
   caddy:

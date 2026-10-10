@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Core\Assets\AssetVersionWriter;
 use App\Core\Modules\ModuleRegistry;
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\AssetOrigin;
 use App\Enums\TaskOutputRole;
 use App\Models\Asset;
@@ -21,6 +22,7 @@ class CreateAsset
     public function __construct(
         private ModuleRegistry $modules,
         private AssetVersionWriter $versions,
+        private ChangeRecorder $changes,
     ) {}
 
     /**
@@ -56,17 +58,18 @@ class CreateAsset
             $this->versions->write($asset, null, $data['spec'], null, $data['files'] ?? [], 'Created', $user);
 
             if ($project) {
-                ProjectAsset::create(['workspace_id' => $workspace->id, 'project_id' => $project->id, 'asset_id' => $asset->id]);
+                $this->changes->upsert(ProjectAsset::create(['workspace_id' => $workspace->id, 'project_id' => $project->id, 'asset_id' => $asset->id]));
             }
 
             if ($task) {
-                TaskOutput::create([
+                $output = TaskOutput::create([
                     'workspace_id' => $workspace->id,
                     'task_id' => $task->id,
                     'asset_id' => $asset->id,
                     // The first output of a task is its primary one.
                     'role' => $task->outputs()->exists() ? TaskOutputRole::Secondary : TaskOutputRole::Primary,
                 ]);
+                $this->changes->upsert($output);
             }
 
             return $asset->refresh();

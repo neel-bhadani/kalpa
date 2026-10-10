@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\TaskEventType;
 use App\Models\Task;
 use App\Models\TaskDependency;
@@ -10,7 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class RemoveTaskDependency
 {
-    public function __construct(private RecordTaskEvent $recordEvent) {}
+    public function __construct(
+        private RecordTaskEvent $recordEvent,
+        private ChangeRecorder $changes,
+    ) {}
 
     public function handle(Task $task, string $dependsOnTaskId, User $user): void
     {
@@ -21,6 +25,7 @@ class RemoveTaskDependency
 
             if ($deleted > 0) {
                 $this->recordEvent->handle($task, TaskEventType::DependencyRemoved, $user, ['depends_on_task_id' => $dependsOnTaskId]);
+                $this->changes->upsert($task);
             }
         });
     }

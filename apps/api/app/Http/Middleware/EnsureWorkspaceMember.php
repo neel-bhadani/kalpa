@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Core\Sync\CurrentDevice;
 use App\Core\Workspaces\CurrentWorkspace;
+use App\Models\UserDevice;
 use App\Models\WorkspaceMember;
 use Closure;
 use Illuminate\Http\Request;
@@ -11,10 +13,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Workspace-scoped routes need an X-Workspace-Id header for a workspace the user belongs to.
+ * An optional X-Device-Id names the user's device making the request.
  */
 class EnsureWorkspaceMember
 {
-    public function __construct(private CurrentWorkspace $current) {}
+    public function __construct(
+        private CurrentWorkspace $current,
+        private CurrentDevice $device,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -30,6 +36,12 @@ class EnsureWorkspaceMember
         abort_if($membership === null || $membership->workspace === null, 403, 'You are not a member of this workspace.');
 
         $this->current->set($membership->workspace, $membership->role);
+
+        // Optional: which of the user's devices is calling, recorded on change_log rows.
+        $deviceId = (string) $request->header('X-Device-Id');
+        if (Str::isUuid($deviceId)) {
+            $this->device->set(UserDevice::whereKey($deviceId)->where('user_id', $request->user()->id)->first());
+        }
 
         return $next($request);
     }

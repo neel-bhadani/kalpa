@@ -10,6 +10,8 @@ async function logout() {
 // Signed in: this tab starts running device jobs (and live updates connect on first use).
 onMounted(() => {
   useBrowserWorker().start().catch(error => console.warn('[kalpa worker] could not start', error))
+  // Offline cache and sync for this workspace.
+  useSyncStore().start().catch(error => console.warn('[kalpa sync] could not start', error))
 })
 
 // Below 768px (md) the sidebar shows icons only.
@@ -62,12 +64,14 @@ const activeClasses = '!bg-accent/10 !text-text'
           <p class="truncate text-xs text-muted">{{ auth.currentWorkspace?.name }}</p>
         </div>
         <div class="flex items-center gap-2">
+          <SyncPill />
           <NotificationBell />
           <button class="rounded-lg border border-muted/30 px-3 py-1.5 text-sm hover:bg-panel" @click="logout">Log out</button>
         </div>
       </header>
 
       <slot />
+      <ConflictDialog />
     </div>
   </div>
 </template>

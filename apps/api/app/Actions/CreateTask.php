@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Core\Modules\ModuleRegistry;
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\TaskEventType;
 use App\Models\Project;
 use App\Models\Task;
@@ -14,6 +15,7 @@ class CreateTask
 {
     public function __construct(
         private RecordTaskEvent $recordEvent,
+        private ChangeRecorder $changes,
         private ModuleRegistry $modules,
     ) {}
 
@@ -41,6 +43,7 @@ class CreateTask
             ])->refresh();
 
             $this->recordEvent->handle($task, TaskEventType::Created, $user, to: $task->status);
+            $this->changes->upsert($task);
 
             return $task;
         });

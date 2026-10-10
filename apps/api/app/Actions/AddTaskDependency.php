@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Core\Sync\ChangeRecorder;
 use App\Enums\TaskEventType;
 use App\Models\Project;
 use App\Models\Task;
@@ -12,7 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class AddTaskDependency
 {
-    public function __construct(private RecordTaskEvent $recordEvent) {}
+    public function __construct(
+        private RecordTaskEvent $recordEvent,
+        private ChangeRecorder $changes,
+    ) {}
 
     /**
      * Make $task wait for $dependsOn. Both must be in the same project, and no cycle may form.
@@ -44,6 +48,8 @@ class AddTaskDependency
 
             if ($dependency->wasRecentlyCreated) {
                 $this->recordEvent->handle($task, TaskEventType::DependencyAdded, $user, ['depends_on_task_id' => $dependsOn->id]);
+                // Its depends_on list changed.
+                $this->changes->upsert($task);
             }
 
             return $dependency;

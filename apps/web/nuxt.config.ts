@@ -15,7 +15,30 @@ export default defineNuxtConfig({
     },
   },
   devtools: { enabled: false },
-  modules: ['@pinia/nuxt'],
+  modules: ['@pinia/nuxt', '@vite-pwa/nuxt'],
+  // Offline app shell: a service worker precaches the built app (shell and every module chunk).
+  // API calls are never cached by it; data comes from IndexedDB (packages/core/src/sync).
+  // Only in builds (make web-preview); the dev server can't work offline anyway.
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'Kalpa Studio',
+      short_name: 'Kalpa',
+      theme_color: '#07080C',
+      background_color: '#07080C',
+      display: 'standalone',
+    },
+    workbox: {
+      globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,webmanifest}'],
+      // The app shell; @vite-pwa/nuxt precaches index.html as "/".
+      navigateFallback: '/',
+      // Never answer these from the app shell: API, auth, storage, websockets, Horizon.
+      navigateFallbackDenylist: [/^\/api\//, /^\/sanctum\//, /^\/kalpa\//, /^\/app\//, /^\/horizon/],
+      runtimeCaching: [],
+    },
+    client: { installPrompt: false },
+    devOptions: { enabled: false },
+  },
   css: ['~/assets/css/main.css'],
   alias: {
     '@kalpa/core': `${packagesDir}/core/src`,
@@ -24,7 +47,7 @@ export default defineNuxtConfig({
     // Let files in packages/ find the types of packages installed here (paths are relative to .nuxt/).
     tsConfig: {
       compilerOptions: {
-        paths: { 'vue': ['../node_modules/vue'], 'hash-wasm': ['../node_modules/hash-wasm'] },
+        paths: { 'vue': ['../node_modules/vue'], 'hash-wasm': ['../node_modules/hash-wasm'], 'idb': ['../node_modules/idb'] },
       },
     },
   },
@@ -33,6 +56,6 @@ export default defineNuxtConfig({
     // Let the dev server read the shared packages outside apps/web.
     server: { fs: { allow: [packagesDir] } },
     // Files in packages/ import these too; resolve them from apps/web/node_modules.
-    resolve: { dedupe: ['vue', 'hash-wasm'] },
+    resolve: { dedupe: ['vue', 'hash-wasm', 'idb'] },
   },
 })
