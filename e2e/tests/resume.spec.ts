@@ -20,8 +20,9 @@ test('register, make a task, and resume it exactly on a second device', async ({
   await pageA.getByPlaceholder('Name').fill('Resume test')
   await pageA.getByRole('button', { name: 'Create' }).click()
   await pageA.getByRole('link', { name: /Resume test/ }).click()
-  await pageA.getByPlaceholder('story').fill('story')
-  await pageA.getByPlaceholder('outline').fill('write_script')
+  // A voice task: its editor is still the placeholder (notes and tabs).
+  await pageA.getByPlaceholder('story').fill('voice')
+  await pageA.getByPlaceholder('outline').fill('record_dialogue')
   await pageA.getByPlaceholder('What needs doing').fill('Draft the opening')
   await pageA.getByRole('button', { name: 'Add task' }).click()
   await expect(pageA.getByText('Draft the opening')).toBeVisible()

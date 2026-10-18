@@ -58,6 +58,13 @@ export default defineNuxtConfig({
           'idb': ['../node_modules/idb'],
           '@wllama/wllama/*': ['../node_modules/@wllama/wllama/*'],
           '@mlc-ai/web-llm': ['../node_modules/@mlc-ai/web-llm'],
+          'prosemirror-model': ['../node_modules/prosemirror-model'],
+          'prosemirror-state': ['../node_modules/prosemirror-state'],
+          'prosemirror-view': ['../node_modules/prosemirror-view'],
+          'prosemirror-keymap': ['../node_modules/prosemirror-keymap'],
+          'prosemirror-history': ['../node_modules/prosemirror-history'],
+          'prosemirror-commands': ['../node_modules/prosemirror-commands'],
+          'prosemirror-transform': ['../node_modules/prosemirror-transform'],
         },
       },
     },
@@ -67,7 +74,7 @@ export default defineNuxtConfig({
     // Let the dev server read the shared packages outside apps/web.
     server: { fs: { allow: [packagesDir] } },
     // Files in packages/ import these too; resolve them from apps/web/node_modules.
-    resolve: { dedupe: ['vue', 'hash-wasm', 'idb', '@wllama/wllama', '@mlc-ai/web-llm'] },
+    resolve: { dedupe: ['vue', 'hash-wasm', 'idb', '@wllama/wllama', '@mlc-ai/web-llm', 'prosemirror-model', 'prosemirror-state', 'prosemirror-view', 'prosemirror-keymap', 'prosemirror-history', 'prosemirror-commands', 'prosemirror-transform'] },
     // The model engines are large and loaded only when a model runs; don't pre-bundle them.
     optimizeDeps: { exclude: ['@wllama/wllama', '@mlc-ai/web-llm'] },
   },

@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Core\Modules\ModuleRegistry;
+use App\Core\Modules\StartsTasks;
 use App\Core\Sync\ChangeRecorder;
 use App\Enums\TaskEventType;
 use App\Models\Project;
@@ -20,7 +21,8 @@ class CreateTask
     ) {}
 
     /**
-     * Create a draft task in the project, for an enabled module and one of its kinds.
+     * Create a draft task in the project, for an enabled module and one of its kinds. The module
+     * may set the task up (StartsTasks), e.g. make the asset it works on.
      *
      * @param  array{module: string, kind: string, title: string, mode?: string, assigned_to?: string, parent_task_id?: string|null}  $attributes
      */
@@ -44,6 +46,11 @@ class CreateTask
 
             $this->recordEvent->handle($task, TaskEventType::Created, $user, to: $task->status);
             $this->changes->upsert($task);
+
+            $module = $this->modules->find($task->module);
+            if ($module instanceof StartsTasks) {
+                $module->taskCreated($task, $user);
+            }
 
             return $task;
         });

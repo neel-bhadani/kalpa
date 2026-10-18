@@ -175,6 +175,7 @@ try {
             :checkpoint="checkpoint.checkpoint.value"
             :highlight="highlight"
             :readonly="!canEdit"
+            :api="api"
             @update:checkpoint="onEditorChange"
           />
         </div>

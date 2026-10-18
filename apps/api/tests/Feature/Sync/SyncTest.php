@@ -33,8 +33,9 @@ function push(User $user, UserDevice $device, array $ops)
 it('pulls changes in pages, each row once at its latest state', function () {
     $ada = owner();
     $project = makeProject($ada); // project + project_memory
-    $a = makeTask($project, $ada, 'A');
-    makeTask($project, $ada, 'B');
+    // Voice tasks: a story task would also make its asset rows.
+    $a = makeTask($project, $ada, 'A', 'voice', 'record_dialogue');
+    makeTask($project, $ada, 'B', 'voice', 'record_dialogue');
     actingIn($ada, workspaceOf($ada))->patchJson("/api/v1/tasks/{$a->id}", ['title' => 'A2']); // A again
 
     $first = actingIn($ada, workspaceOf($ada))->getJson('/api/v1/sync?after=0&limit=3')
@@ -208,11 +209,14 @@ dataset('changing actions', [
     'open project' => [fn ($ada, $w, $p) => actingIn($ada, $w)->postJson("/api/v1/projects/{$p->id}/open"), [['project', 'upsert']]],
     'delete project' => [fn ($ada, $w, $p) => actingIn($ada, $w)->deleteJson("/api/v1/projects/{$p->id}"), [['task', 'delete'], ['project', 'delete']]],
     'patch memory' => [fn ($ada, $w, $p) => actingIn($ada, $w)->patchJson("/api/v1/projects/{$p->id}/memory", ['base_version' => 1, 'patch' => [['op' => 'add', 'path' => '/style/x', 'value' => 1]]]), [['project_memory', 'upsert']]],
-    'create task' => [fn ($ada, $w, $p) => makeTask($p, $ada, 'New'), [['task', 'upsert']]],
+    'create task' => [fn ($ada, $w, $p) => makeTask($p, $ada, 'New', 'voice', 'record_dialogue'), [['task', 'upsert']]],
+    // A story task also makes the story it works on.
+    'create story task' => [fn ($ada, $w, $p) => makeTask($p, $ada, 'New'),
+        [['task', 'upsert'], ['asset_version', 'upsert'], ['asset', 'upsert'], ['project_asset', 'upsert'], ['task_output', 'upsert']]],
     'update task' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->patchJson("/api/v1/tasks/{$t->id}", ['title' => 'X']), [['task', 'upsert']]],
     'change status' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->postJson("/api/v1/tasks/{$t->id}/status", ['to' => 'in_progress']), [['task', 'upsert']]],
     'save checkpoint' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->putJson("/api/v1/tasks/{$t->id}/checkpoint", ['base_version' => 1, 'checkpoint' => ['a' => 1]]), [['task', 'upsert']]],
-    'add dependency' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->postJson("/api/v1/tasks/{$t->id}/dependencies", ['depends_on_task_id' => makeTask($p, $ada, 'Dep')->id]), [['task', 'upsert'], ['task', 'upsert']]],
+    'add dependency' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->postJson("/api/v1/tasks/{$t->id}/dependencies", ['depends_on_task_id' => makeTask($p, $ada, 'Dep', 'voice', 'record_dialogue')->id]), [['task', 'upsert'], ['task', 'upsert']]],
     'delete task' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->deleteJson("/api/v1/tasks/{$t->id}"), [['task', 'delete']]],
     'mark unsynced' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->postJson('/api/v1/sync/unsynced', ['task_ids' => [$t->id]]), [['task', 'upsert']]],
     'create asset' => [fn ($ada, $w, $p, $t) => actingIn($ada, $w)->postJson('/api/v1/assets', ['kind' => 'story', 'name' => 'S', 'spec' => ['title' => 'S'], 'project_id' => $p->id, 'task_id' => $t->id]),

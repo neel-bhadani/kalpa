@@ -70,8 +70,9 @@ export function api(context: BrowserContext) {
   return call
 }
 
-// A fresh project and task for one test, so tests don't affect each other.
-export async function newTask(context: BrowserContext, title: string, module = 'story', kind = 'write_script') {
+// A fresh project and task for one test, so tests don't affect each other. By default a voice task,
+// whose editor is still the placeholder (notes and tabs) the core tests use.
+export async function newTask(context: BrowserContext, title: string, module = 'voice', kind = 'record_dialogue') {
   const call = api(context)
   const project = (await call('POST', '/api/v1/projects', { name: `${title} project` })).data.data
   const task = (await call('POST', `/api/v1/projects/${project.id}/tasks`, { module, kind, title })).data.data

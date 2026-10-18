@@ -7,7 +7,8 @@ test('a viewer can look but not change anything', async ({ browser }) => {
 
   await page.goto(`/m/${task.module}/tasks/${task.id}`)
   await expect(page.getByText(task.title).first()).toBeVisible()
-  await expect(page.getByTestId('notes')).toHaveAttribute('readonly', '')
+  // The fixture task is a script: the page can't be edited.
+  await expect(page.getByTestId('screenplay')).toHaveAttribute('contenteditable', 'false')
   await expect(page.getByTestId('read-only')).toBeVisible()
   // The assistant panel is open by default; a viewer gets no input box.
   await expect(page.getByTestId('assistant')).toBeVisible()

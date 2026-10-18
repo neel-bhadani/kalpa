@@ -29,13 +29,33 @@ class AssetSchemas
             return;
         }
 
-        // { "/name": ["The data (null) must match the type: string"], ... } as "spec./name" errors.
+        // { "/scenes/0/title": ["The data (null) must match the type: string"], ... } as "spec.scenes.0.title" errors.
         $errors = [];
         foreach ((new ErrorFormatter)->format($result->error()) as $pointer => $messages) {
-            $errors['spec'.($pointer === '/' ? '' : '.'.ltrim($pointer, '/'))] = $messages;
+            $errors['spec'.($pointer === '/' ? '' : '.'.str_replace('/', '.', ltrim($pointer, '/')))] = $messages;
         }
 
-        throw ValidationException::withMessages($errors);
+        throw ValidationException::withMessages($this->withoutEchoes($errors));
+    }
+
+    /**
+     * When something inside an object fails, the validator also says the object's own properties
+     * are "not allowed" (with additionalProperties: false). Drop those echoes where a deeper error
+     * explains the problem.
+     *
+     * @param  array<string, list<string>>  $errors
+     * @return array<string, list<string>>
+     */
+    private function withoutEchoes(array $errors): array
+    {
+        foreach ($errors as $key => $messages) {
+            $hasDeeper = collect(array_keys($errors))->contains(fn (string $other) => str_starts_with($other, "{$key}."));
+            if ($hasDeeper) {
+                $errors[$key] = array_values(array_filter($messages, fn (string $message) => ! str_starts_with($message, 'Additional object properties are not allowed')));
+            }
+        }
+
+        return array_filter($errors);
     }
 
     /**

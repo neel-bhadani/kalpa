@@ -170,15 +170,16 @@ services:
     # Same layout as the repo, so apps/web can import ../../packages/* by path alias.
     working_dir: /kalpa/apps/web
     # Install npm packages on first start (fresh clone), then run the Nuxt dev server, or in
-    # preview mode (KALPA_WEB_MODE=preview, see make web-preview) build the app and serve the build,
-    # which is what works offline (service worker).
+    # preview mode (KALPA_WEB_MODE=preview, see make web-preview) serve the build that make web-build
+    # made, which is what works offline (service worker).
     command:
       - sh
       - -c
       - |
         [ -d node_modules ] || npm ci
         if [ "$$KALPA_WEB_MODE" = preview ]; then
-          npx nuxi generate && exec node scripts/serve-static.mjs
+          [ -f .output/public/index.html ] || { echo "No build: run make web-build first."; exit 1; }
+          exec node scripts/serve-static.mjs
         fi
         exec npm run dev -- --host 0.0.0.0 --port 3000
     environment:

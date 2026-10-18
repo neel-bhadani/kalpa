@@ -2,6 +2,8 @@
 
 namespace App\Core\Assets;
 
+use App\Core\Modules\ModuleRegistry;
+use App\Core\Modules\ProjectsAssetVersions;
 use App\Core\Sync\ChangeRecorder;
 use App\Enums\ActorType;
 use App\Models\Asset;
@@ -13,13 +15,15 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Writes one asset version: validates the spec, records the files by role, counts the file
- * references and moves the asset's current version. Call inside a transaction.
+ * references and moves the asset's current version, then lets the module that owns the kind
+ * update its own tables (ProjectsAssetVersions). Call inside a transaction.
  */
 class AssetVersionWriter
 {
     public function __construct(
         private AssetSchemas $schemas,
         private ChangeRecorder $changes,
+        private ModuleRegistry $modules,
     ) {}
 
     /**
@@ -66,6 +70,11 @@ class AssetVersionWriter
 
         $asset->current_version_id = $version->id;
         $asset->touch();
+
+        $owner = $this->modules->find((string) $this->modules->assetKindOwner($asset->kind));
+        if ($owner instanceof ProjectsAssetVersions) {
+            $owner->versionWritten($asset, $version);
+        }
 
         $this->changes->upsert($version);
         $this->changes->upsert($asset);

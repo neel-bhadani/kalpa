@@ -24,6 +24,7 @@ Every model, asset, dataset and third-party library chosen for Kalpa Studio (fra
 | @wllama/wllama | JS library (llama.cpp compiled to WebAssembly, runs GGUF models on the CPU in its own Web Worker; includes llama.cpp, MIT) | 3.8.1 | MIT | Yes | https://github.com/ngxson/wllama | Web: on-device assistant brain (WllamaBrain). On browsers without JSPI/Memory64 (Safari) it loads its compat build from jsDelivr (@wllama/wllama-compat, MIT) |
 | @mlc-ai/web-llm | JS library (runs MLC model builds on WebGPU; brings loglevel, MIT) | 0.2.86 | Apache-2.0 | Yes | https://github.com/mlc-ai/web-llm | Web: on-device assistant brain on WebGPU devices (WebLLMBrain). Loads each model's WebGPU kernel (.wasm) from github.com/mlc-ai/binary-mlc-llm-libs (Apache-2.0) |
 | ollama/ollama | Service (local LLM server, Docker image; optional, compose profile "ai") | 0.40.6 | MIT | Yes | https://github.com/ollama/ollama | kalpa-ollama: Local Ollama provider |
+| prosemirror-model, -state, -view, -transform, -keymap, -history, -commands | JS libraries (rich-text editor toolkit; brings orderedmap, rope-sequence, w3c-keyname, all MIT). Loaded only in the Story & Script editor chunk | 1.25 / 1.4 / 1.42 / 1.12 / 1.2 / 1.5 / 1.7 | MIT | Yes | https://github.com/ProseMirror/prosemirror | Web: screenplay editor (packages/modules/story/editor) |
 
 ## Models
 

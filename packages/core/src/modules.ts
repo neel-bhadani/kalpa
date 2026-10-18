@@ -21,8 +21,12 @@ export type EditorTask = {
   mode: string
   checkpoint: unknown
   // Assets the task produced.
-  outputs?: { role: string; asset: { id: string; name: string; kind_label: string; current_version?: { number: number } } }[]
+  outputs?: { role: string; asset: { id: string; name: string; kind: string; kind_label: string; current_version?: { number: number } } }[]
 }
+
+// The app's API client, handed to editors (it adds the session, CSRF and workspace headers).
+// Errors carry the HTTP status and body (status, data), e.g. 409 with the current version.
+export type EditorApi = <T = any>(url: string, options?: { method?: string; body?: unknown; query?: Record<string, unknown> }) => Promise<T>
 
 // A subset of JSON Schema, enough to describe command arguments.
 export type JsonSchema = {

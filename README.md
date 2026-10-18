@@ -34,10 +34,12 @@ The page shows green or red for app, db and redis. API health: `GET /api/v1/heal
 | `make sh-api` / `make sh-web` | Shell in the API / web container |
 | `make test` | Run all tests: Pest (`make test-api`, database `kalpa_test`) and Vitest (`make test-web`) |
 | `make module-keys` | Export the API's module keys to `packages/core/src/module-keys.json` (run by `make test`) |
-| `make web-preview` / `make web-dev` | Serve a built app (works offline after the first visit) / back to the dev server |
-| `make typecheck` | Type-check the web app and the packages it imports |
+| `make web-build` | Production build of the web app (`nuxi generate`); stops with the build error if it fails or runs over 10 minutes |
+| `make web-preview` / `make web-dev` | Build and serve the built app (works offline after the first visit) / back to the dev server |
+| `make typecheck` | Type-check the web app and the packages it imports (clears leftover build output first) |
 | `make fresh` | `migrate:fresh` on the dev database |
-| `make e2e` | Browser tests (Playwright, `kalpa-e2e`): builds and serves the web app, makes test users, runs `e2e/tests`, then goes back to the dev server |
+| `make e2e` | Browser tests (Playwright, `kalpa-e2e`): builds and serves the web app (stops at once if the build fails), makes test users, runs `e2e/tests`, then goes back to the dev server |
+| `make ai-up` / `make ai-down` / `make ai-pull MODEL=…` | Optional local Ollama (`kalpa-ollama`, 3 GB limit) |
 
 ## Offline and sync
 
@@ -47,6 +49,9 @@ http://127.0.0.1:8089 next to http://localhost:8089: different origins keep sepa
 Offline reloads need the built app (`make web-preview`); the dev server can't work offline.
 
 ## End-to-end tests
+
+Run `make ai-down` before `make e2e` on low-RAM machines: the build and the browser need the memory a
+loaded Ollama model takes.
 
 `make e2e` runs the Playwright tests in `e2e/tests` against the running stack (`make up` first). The
 `kalpa-e2e` service is in the `e2e` compose profile, so `make up` never starts it. Each test uses two
