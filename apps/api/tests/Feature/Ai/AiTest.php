@@ -40,9 +40,10 @@ function aiStep($user, $workspace, string $session, string $status = 'awaiting_r
     ])->assertCreated()->json('data.id');
 }
 
-it('seeds the model registry from config, all off except the fake brain', function () {
+it('seeds the model registry from config, only the assistant brains on', function () {
     expect(RegisteredModel::count())->toBe(count(config('models')))
-        ->and(RegisteredModel::where('enabled', true)->pluck('key')->all())->toBe(['fake-brain'])
+        ->and(RegisteredModel::where('enabled', true)->orderBy('key')->pluck('key')->all())->toBe(['fake-brain', 'qwen3-0.6b', 'qwen3-1.7b'])
+        ->and(RegisteredModel::where('key', 'qwen3-0.6b')->first()->builds['wllama']['sha256'])->toBe(RegisteredModel::where('key', 'qwen3-0.6b')->value('sha256'))
         ->and(RegisteredModel::where('key', 'trellis')->value('commercial_ok'))->toBeFalse()
         ->and(RegisteredModel::where('key', 'ace-step-1.5')->value('commercial_ok'))->toBeTrue()
         ->and(RegisteredModel::where('key', 'kokoro-82m')->first()->targets)->toBe(['device', 'worker']);

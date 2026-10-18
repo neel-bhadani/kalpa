@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { findModule } from '@kalpa/core'
-import { AssistantRunner, FakeBrain, type AiApi, type CheckpointPort, type Mode, type Step } from '@kalpa/ai-runtime'
+import { findModule, formatBytes, type BrainChoice } from '@kalpa/core'
+import { AssistantRunner, tokensPerSecond, type AiApi, type Brain, type CheckpointPort, type Mode, type Step } from '@kalpa/ai-runtime'
 
 // The task's assistant: chat, a mode switch, and the steps it takes (approve, reject, undo, retry).
 // The assistant runs in this browser (packages/ai-runtime); steps change the editor through the
@@ -19,8 +19,47 @@ const input = ref('')
 const thinking = ref<string | null>(null)
 const stepError = ref('')
 const canAct = computed(() => auth.currentWorkspace?.role !== 'viewer')
-// No real models until P1: the scripted fake brain, in development only (APP_ENV=local).
-const brain = auth.devTools ? new FakeBrain() : null
+
+// The brain: picked from the device and the user's choice (stores/brains.ts). A model that
+// isn't on this device yet is downloaded only after the user says yes to its size.
+const brains = useBrainsStore()
+const missing = ref(0)
+const brainError = ref('')
+const current = computed<Brain | null>(() => brains.brainFor(brains.plan))
+const status = computed(() => brains.describe(brains.plan))
+const download = computed(() => (brains.plan.kind === 'wllama' ? brains.downloads[brains.plan.model.key] : undefined))
+const ready = computed(() => current.value !== null && missing.value === 0)
+
+watch(() => brains.plan, async (plan) => {
+  brains.tokensPerSecond = null
+  missing.value = plan.kind === 'wllama' || plan.kind === 'webllm' ? await brains.missingBytes(plan.kind, plan.model).catch(() => 0) : 0
+}, { immediate: true })
+
+// The picker's value: "auto", "device", "fake" or "provider:<id>".
+const choiceValue = computed({
+  get: () => (typeof brains.choice === 'object' ? `provider:${brains.choice.provider}` : brains.choice),
+  set: (value: string) => brains.setChoice((value.startsWith('provider:') ? { provider: value.slice(9) } : value) as BrainChoice),
+})
+
+async function downloadModel() {
+  if (brains.plan.kind !== 'wllama') {
+    // WebLLM fetches its files while loading; the first message starts it.
+    missing.value = 0
+    return
+  }
+  brainError.value = ''
+  try {
+    await brains.download(brains.plan.model)
+    missing.value = 0
+  } catch {
+    // Shown from brains.downloads.
+  }
+}
+
+// The runner asks whichever brain is picked right now.
+const brain: Brain = {
+  chat: request => current.value!.chat(request),
+}
 
 const steps = computed(() => [...(session.value?.steps ?? [])].sort((a, b) => a.seq - b.seq))
 
@@ -50,22 +89,22 @@ const aiApi: AiApi = {
   retry: async id => (await api<{ data: Step }>(`/api/v1/ai/steps/${id}/retry`, { method: 'POST' })).data,
 }
 
-const runner = brain
-  ? new AssistantRunner({
-      brain,
-      commands: findModule(props.module)?.commands ?? {},
-      api: aiApi,
-      checkpoint: props.checkpoint,
-      mode: () => session.value?.mode ?? 'semi',
-      // A short pause between Auto steps, so each one can be seen happening.
-      stepDelayMs: 700,
-      onEvent: (event) => {
-        if (event.type === 'thinking') thinking.value = event.text
-        if (event.type === 'reply' || event.type === 'stopped') thinking.value = null
-        if (event.type === 'step') upsertStep(event.step)
-      },
-    })
-  : null
+const runner = new AssistantRunner({
+  brain,
+  commands: findModule(props.module)?.commands ?? {},
+  api: aiApi,
+  checkpoint: props.checkpoint,
+  mode: () => session.value?.mode ?? 'semi',
+  system: `You are the ${props.module} assistant in Kalpa Studio, helping with one task. Reply briefly. When the user asks for a change, make it with the tools.`,
+  // A short pause between Auto steps, so each one can be seen happening.
+  stepDelayMs: 700,
+  onEvent: (event) => {
+    if (event.type === 'thinking') thinking.value = event.text
+    if (event.type === 'reply' || event.type === 'stopped') thinking.value = null
+    if (event.type === 'step') upsertStep(event.step)
+    if (event.type === 'usage') brains.tokensPerSecond = tokensPerSecond(event)
+  },
+})
 
 async function load() {
   const { data: sessions } = await api<{ data: Session[] }>(`/api/v1/tasks/${props.taskId}/ai/sessions`)
@@ -75,23 +114,26 @@ async function load() {
   }
   if (!current) return
   session.value = (await api<{ data: Session }>(`/api/v1/ai/sessions/${current.id}`)).data
-  runner?.setHistory(session.value.messages
+  runner.setHistory(session.value.messages
     .filter(message => message.role === 'user' || message.role === 'assistant')
     .map(message => ({ role: message.role as 'user' | 'assistant', content: message.content.text ?? '' })))
 }
 
 async function send() {
   const text = input.value.trim()
-  if (!text || !runner || runner.busy) return
+  if (!text || !ready.value || runner.busy) return
   input.value = ''
   errors.clear()
   stepError.value = ''
+  brainError.value = ''
   try {
     thinking.value = ''
     await runner.send(text)
   } catch (error) {
     thinking.value = null
-    errors.show(error)
+    // Saving the message failed (an API error), or the brain did (a plain Error).
+    if (error instanceof Error && !('status' in error)) brainError.value = error.message
+    else errors.show(error)
   }
 }
 
@@ -102,7 +144,6 @@ async function setMode(mode: Mode) {
 }
 
 async function act(step: Step, action: 'approve' | 'reject' | 'undo' | 'retry') {
-  if (!runner) return
   stepError.value = ''
   try {
     await runner[action](step)
@@ -145,8 +186,11 @@ const modes: { key: Mode; label: string; hint: string }[] = [
   { key: 'manual', label: 'Manual', hint: 'Suggestions only' },
 ]
 
-onMounted(() => load().catch(error => errors.show(error)))
-onBeforeUnmount(() => runner?.abort())
+onMounted(() => {
+  load().catch(error => errors.show(error))
+  brains.load().catch(() => { brainError.value = 'Could not load the model list.' })
+})
+onBeforeUnmount(() => runner.abort())
 </script>
 
 <template>
@@ -154,7 +198,7 @@ onBeforeUnmount(() => runner?.abort())
     <header class="flex items-center justify-between gap-2 border-b border-muted/15 px-4 py-3">
       <div>
         <p class="text-sm font-semibold text-accent">Assistant</p>
-        <p class="text-xs capitalize text-muted">{{ session?.assistant ?? '…' }}<template v-if="!brain"> · models arrive in P1</template></p>
+        <p class="text-xs capitalize text-muted">{{ session?.assistant ?? '…' }}</p>
       </div>
       <div class="flex rounded-lg border border-muted/25 p-0.5 text-xs" role="radiogroup" aria-label="Assistant mode">
         <button
@@ -173,6 +217,43 @@ onBeforeUnmount(() => runner?.abort())
         </button>
       </div>
     </header>
+
+    <div class="flex items-center gap-2 border-b border-muted/15 px-4 py-2 text-xs">
+      <select v-model="choiceValue" class="rounded-md border border-muted/25 bg-bg px-1.5 py-1 text-xs" aria-label="Brain" data-test="brain-picker">
+        <option value="auto">Auto</option>
+        <option value="device">This device</option>
+        <option v-for="provider in brains.providers.filter(item => item.enabled)" :key="provider.id" :value="`provider:${provider.id}`">{{ provider.name }}</option>
+        <option v-if="auth.devTools" value="fake">Test brain (dev)</option>
+      </select>
+      <p class="min-w-0 flex-1 truncate font-mono text-muted" data-test="brain-status">
+        <template v-if="status">{{ status.name }} · {{ status.where }}<template v-if="brains.tokensPerSecond"> · {{ brains.tokensPerSecond.toFixed(1) }} tok/s</template></template>
+        <template v-else-if="brains.plan.kind === 'none'">{{ brains.plan.reason }}</template>
+      </p>
+    </div>
+
+    <div v-if="missing > 0 && (brains.plan.kind === 'wllama' || brains.plan.kind === 'webllm')" class="border-b border-muted/15 px-4 py-3 text-xs" data-test="download-offer">
+      <template v-if="download && !download.error">
+        <p>{{ download.checking ? 'Checking the file…' : `Downloading ${brains.plan.model.display_name}…` }}</p>
+        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
+          <div class="h-full bg-media" :style="{ width: `${(download.done / download.total) * 100}%` }" />
+        </div>
+        <p class="mt-1 flex justify-between font-mono text-muted">
+          <span>{{ formatBytes(download.done) }} / {{ formatBytes(download.total) }}</span>
+          <button v-if="!download.checking" class="text-muted hover:text-text" @click="brains.stopDownload(brains.plan.model)">Pause</button>
+        </p>
+      </template>
+      <template v-else>
+        <p>
+          {{ brains.plan.model.display_name }} runs on this device after a one-time download of
+          <span class="font-mono">{{ formatBytes(missing) }}</span>. It stays saved in this browser.
+        </p>
+        <p v-if="download?.error" class="mt-1 text-red-400">{{ download.error }}</p>
+        <button class="mt-2 rounded-md bg-accent px-2 py-1 font-medium text-bg" data-test="download-model" @click="downloadModel">
+          Download {{ formatBytes(missing) }}
+        </button>
+      </template>
+    </div>
+    <p v-if="brains.gpuProgress" class="border-b border-muted/15 px-4 py-2 text-xs text-muted">{{ brains.gpuProgress.text }}</p>
 
     <div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 text-sm" data-test="chat">
       <p v-if="!session?.messages.length && thinking === null" class="text-muted">Ask the assistant for help. Try "demo".</p>
@@ -202,7 +283,7 @@ onBeforeUnmount(() => runner?.abort())
               </span>
             </div>
             <p v-if="step.error" class="mt-1 text-xs text-red-400">{{ step.error }}</p>
-            <div v-if="canAct && runner" class="mt-2 flex gap-3 text-xs">
+            <div v-if="canAct" class="mt-2 flex gap-3 text-xs">
               <button v-if="['planned', 'awaiting_review'].includes(step.status)" class="text-accent hover:underline" data-test="approve" @click="act(step, 'approve')">Approve</button>
               <button v-if="['planned', 'awaiting_review'].includes(step.status)" class="text-muted hover:text-text" data-test="reject" @click="act(step, 'reject')">Reject</button>
               <button v-if="step.status === 'done'" class="text-muted hover:text-text" data-test="undo" @click="act(step, 'undo')">Undo</button>
@@ -213,18 +294,19 @@ onBeforeUnmount(() => runner?.abort())
       </section>
 
       <p v-if="errors.message.value" class="text-xs text-red-400">{{ errors.message.value }}</p>
+      <p v-if="brainError" class="text-xs text-red-400" data-test="brain-error">{{ brainError }}</p>
     </div>
 
     <form v-if="canAct" class="flex gap-2 border-t border-muted/15 p-3" @submit.prevent="send">
       <input
         v-model="input"
-        :disabled="!runner || thinking !== null"
+        :disabled="!ready || thinking !== null"
         placeholder="Message the assistant"
         class="field !mt-0 flex-1"
         data-test="assistant-input"
       >
-      <button v-if="thinking !== null" type="button" class="rounded-lg border border-muted/30 px-3 text-sm" @click="runner?.abort()">Stop</button>
-      <button v-else :disabled="!runner || !input.trim()" class="rounded-lg bg-accent px-3 text-sm font-medium text-bg disabled:opacity-50" data-test="send">Send</button>
+      <button v-if="thinking !== null" type="button" class="rounded-lg border border-muted/30 px-3 text-sm" @click="runner.abort()">Stop</button>
+      <button v-else :disabled="!ready || !input.trim()" class="rounded-lg bg-accent px-3 text-sm font-medium text-bg disabled:opacity-50" data-test="send">Send</button>
     </form>
   </aside>
 </template>

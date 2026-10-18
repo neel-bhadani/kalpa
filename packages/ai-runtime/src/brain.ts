@@ -9,7 +9,11 @@ export type ToolSpec = { name: string; description: string; parameters: JsonSche
 
 export type ToolCall = { id: string; name: string; args: Record<string, unknown> }
 
-export type BrainChunk = { type: 'text'; text: string } | { type: 'tool_call'; call: ToolCall }
+// usage: how fast the reply was generated (tokens after the first one, over the seconds they took).
+export type BrainChunk =
+  | { type: 'text'; text: string }
+  | { type: 'tool_call'; call: ToolCall }
+  | { type: 'usage'; tokens: number; seconds: number }
 
 export type ChatRequest = { messages: ChatMessage[]; tools: ToolSpec[]; signal?: AbortSignal }
 

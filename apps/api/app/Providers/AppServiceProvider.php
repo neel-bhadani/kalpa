@@ -73,6 +73,9 @@ class AppServiceProvider extends ServiceProvider
         // Guessing pairing codes: 10 tries a minute per IP.
         RateLimiter::for('pairing', fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
 
+        // Assistant messages through the provider proxy: 30 a minute per user (each one costs the user money).
+        RateLimiter::for('ai-chat', fn (Request $request) => Limit::perMinute(30)->by((string) $request->user()?->id));
+
         // Starting uploads: 60 a minute per user.
         RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(60)->by((string) $request->user()?->id));
 

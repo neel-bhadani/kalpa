@@ -1,4 +1,4 @@
-.PHONY: up down logs ps sh-api sh-web test test-api test-web module-keys typecheck fresh web-preview web-dev e2e
+.PHONY: up down logs ps sh-api sh-web test test-api test-web module-keys typecheck fresh web-preview web-dev e2e ai-up ai-down ai-pull
 
 up:
 	docker compose up -d --build
@@ -52,3 +52,15 @@ e2e:
 	docker compose exec -T api php artisan e2e:fixtures > e2e/.fixtures.json
 	docker compose --profile e2e run --rm e2e; status=$$?; \
 	KALPA_WEB_MODE=dev docker compose up -d web; exit $$status
+
+# Optional local LLM server (kalpa-ollama, compose profile "ai"; not started by make up).
+ai-up:
+	docker compose --profile ai up -d ollama
+
+ai-down:
+	docker compose --profile ai stop ollama
+
+# Download a model into the ollama-models volume, e.g. make ai-pull MODEL=qwen3:1.7b
+MODEL ?= qwen3:1.7b
+ai-pull:
+	docker compose --profile ai exec ollama ollama pull $(MODEL)

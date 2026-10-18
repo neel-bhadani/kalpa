@@ -33,6 +33,7 @@ const USER_ROUTES = [
     'POST api/v1/ai/providers',
     'PATCH api/v1/ai/providers/{provider}',
     'DELETE api/v1/ai/providers/{provider}',
+    'POST api/v1/ai/providers/{provider}/chat',
 ];
 
 // The claim protocol: a worker token or a browser tab's session plus X-Worker-Id, checked by AuthenticateWorker.

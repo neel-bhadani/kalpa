@@ -48,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ai/providers', [AiProviderController::class, 'store']);
     Route::patch('/ai/providers/{provider}', [AiProviderController::class, 'update'])->whereUuid('provider');
     Route::delete('/ai/providers/{provider}', [AiProviderController::class, 'destroy'])->whereUuid('provider');
+    // Chat through the server for providers whose key is stored here (the key never leaves it).
+    Route::post('/ai/providers/{provider}/chat', [AiProviderController::class, 'chat'])->whereUuid('provider')->middleware('throttle:ai-chat');
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/read', [NotificationController::class, 'markAllRead']);

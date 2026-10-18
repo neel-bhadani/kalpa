@@ -21,6 +21,9 @@ Every model, asset, dataset and third-party library chosen for Kalpa Studio (fra
 | @vite-pwa/nuxt | JS library (service worker / offline app shell; brings vite-plugin-pwa and Workbox, both MIT; build time only) | 1.1 | MIT | Yes | https://github.com/vite-pwa/nuxt | Web: offline app shell |
 | fast-check | JS library (property-based tests; dev only) | 4.10 | MIT | Yes | https://github.com/dubzzz/fast-check | Vitest: outbox safety property |
 | @playwright/test + mcr.microsoft.com/playwright | JS library and Docker image (browser e2e tests; dev only; image bundles Chromium, BSD-3-Clause) | 1.64 | Apache-2.0 | Yes | https://github.com/microsoft/playwright | kalpa-e2e: make e2e |
+| @wllama/wllama | JS library (llama.cpp compiled to WebAssembly, runs GGUF models on the CPU in its own Web Worker; includes llama.cpp, MIT) | 3.8.1 | MIT | Yes | https://github.com/ngxson/wllama | Web: on-device assistant brain (WllamaBrain). On browsers without JSPI/Memory64 (Safari) it loads its compat build from jsDelivr (@wllama/wllama-compat, MIT) |
+| @mlc-ai/web-llm | JS library (runs MLC model builds on WebGPU; brings loglevel, MIT) | 0.2.86 | Apache-2.0 | Yes | https://github.com/mlc-ai/web-llm | Web: on-device assistant brain on WebGPU devices (WebLLMBrain). Loads each model's WebGPU kernel (.wasm) from github.com/mlc-ai/binary-mlc-llm-libs (Apache-2.0) |
+| ollama/ollama | Service (local LLM server, Docker image; optional, compose profile "ai") | 0.40.6 | MIT | Yes | https://github.com/ollama/ollama | kalpa-ollama: Local Ollama provider |
 
 ## Models
 
@@ -31,8 +34,8 @@ commercial use can't be switched on (database CHECK: enabled implies commercial_
 | Model | Capability | Licence | Commercial use | Source | Mark |
 | --- | --- | --- | --- | --- | --- |
 | fake-brain | llm | Kalpa Studio code (dev and tests only) | Yes | this repo | in use (dev) |
-| qwen3-0.6b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-0.6B | registered, not used yet |
-| qwen3-1.7b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-1.7B | registered, not used yet |
+| qwen3-0.6b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-0.6B | in use (assistant). Builds: GGUF unsloth/Qwen3-0.6B-GGUF Qwen3-0.6B-Q4_K_M.gguf (Apache-2.0, 396,705,472 bytes, sha256 ac2d9771…524a); MLC mlc-ai/Qwen3-0.6B-q4f16_1-MLC (no licence stated on the repo; a conversion of the Apache-2.0 weights); Ollama qwen3:0.6b (Apache-2.0) |
+| qwen3-1.7b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-1.7B | in use (assistant). Builds: GGUF unsloth/Qwen3-1.7B-GGUF Qwen3-1.7B-Q4_K_M.gguf (Apache-2.0, 1,107,409,472 bytes, sha256 b139949c…1897); MLC mlc-ai/Qwen3-1.7B-q4f16_1-MLC (no licence stated on the repo; a conversion of the Apache-2.0 weights); Ollama qwen3:1.7b (Apache-2.0) |
 | qwen3-4b | llm | Apache-2.0 | Yes | https://huggingface.co/Qwen/Qwen3-4B | registered, not used yet |
 | kokoro-82m | tts | Apache-2.0 | Yes | https://huggingface.co/hexgrad/Kokoro-82M | registered, not used yet |
 | piper | tts | unclear: original rhasspy/piper (MIT) archived Oct 2025; successor piper1-gpl is GPL-3.0; each voice has its own licence | No (on hold; Kokoro for English, Chatterbox for other languages) | https://github.com/rhasspy/piper | registered, not used yet |

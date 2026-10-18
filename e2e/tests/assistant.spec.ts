@@ -8,6 +8,12 @@ async function mode(page: Page, key: 'auto' | 'semi' | 'manual') {
   await expect(page.getByTestId(`mode-${key}`)).toHaveAttribute('aria-checked', 'true')
 }
 
+// The scripted test brain (local env only); Auto would pick a real model.
+async function useTestBrain(page: Page) {
+  await page.getByTestId('brain-picker').selectOption('fake')
+  await expect(page.getByTestId('brain-status')).toContainText('Test brain')
+}
+
 async function ask(page: Page, text: string) {
   await page.getByTestId('assistant-input').fill(text)
   await page.getByTestId('send').click()
@@ -19,6 +25,7 @@ test('the assistant: Semi waits for approval and can undo; Auto runs alone', asy
   const { url } = await newTask(a.context, `Assistant ${Date.now()}`)
   await a.page.goto(url)
   await b.page.goto(url)
+  await useTestBrain(a.page)
   const steps = a.page.getByTestId('step')
 
   // Semi: three steps wait for review (and show up on the other device too).

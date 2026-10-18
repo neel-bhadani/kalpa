@@ -29,6 +29,9 @@ class RegisteredModelResource extends JsonResource
             'min_tier' => $this->min_tier,
             'targets' => $this->targets,
             'source_url' => $this->source_url,
+            'sha256' => $this->sha256,
+            // Exact files per engine (wllama, webllm, ollama); {} for models not wired yet.
+            'builds' => (object) ($this->builds ?? []),
             'enabled' => $this->enabled,
             // Null when the request doesn't say which device it comes from.
             'fits_device' => $this->fitsDevice,

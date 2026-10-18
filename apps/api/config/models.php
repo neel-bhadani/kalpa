@@ -15,15 +15,47 @@ return [
         'targets' => ['device'], 'source_url' => 'https://github.com/kalpa-studio/kalpa', 'enabled' => true, 'dev_only' => true,
     ],
 
+    // On for the assistant from P1. source_url, sha256 and size_mb are the GGUF that wllama downloads
+    // (the default on-device file); builds lists every engine's exact files. ram_mb is what the loaded
+    // model needs with a 4096-token context (weights + KV cache + scratch), for the device budget.
     'qwen3-0.6b' => [
-        'capability' => 'llm', 'engine' => 'llama.cpp', 'display_name' => 'Qwen3 0.6B (4-bit)',
-        'licence' => 'Apache-2.0', 'commercial_ok' => true, 'size_mb' => 480, 'min_tier' => 'low',
-        'targets' => ['device', 'worker'], 'source_url' => 'https://huggingface.co/Qwen/Qwen3-0.6B',
+        'capability' => 'llm', 'engine' => 'llama.cpp', 'display_name' => 'Qwen3 0.6B',
+        'licence' => 'Apache-2.0', 'commercial_ok' => true, 'size_mb' => 397, 'min_tier' => 'low',
+        'targets' => ['device', 'worker'], 'enabled' => true,
+        'source_url' => 'https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q4_K_M.gguf',
+        'sha256' => 'ac2d97712095a558e31573f62f466a3f9d93990898b0ec79d7c974c1780d524a',
+        'builds' => [
+            'wllama' => [
+                'file' => 'Qwen3-0.6B-Q4_K_M.gguf', 'bytes' => 396705472, 'ram_mb' => 1000,
+                'url' => 'https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q4_K_M.gguf',
+                'sha256' => 'ac2d97712095a558e31573f62f466a3f9d93990898b0ec79d7c974c1780d524a',
+            ],
+            // WebLLM downloads the shards itself (and checks them against the build's own ndarray-cache.json).
+            'webllm' => [
+                'model_id' => 'Qwen3-0.6B-q4f16_1-MLC', 'bytes' => 351517143, 'ram_mb' => 1404,
+                'url' => 'https://huggingface.co/mlc-ai/Qwen3-0.6B-q4f16_1-MLC',
+            ],
+            'ollama' => ['tag' => 'qwen3:0.6b', 'bytes' => 522653277],
+        ],
     ],
     'qwen3-1.7b' => [
-        'capability' => 'llm', 'engine' => 'llama.cpp', 'display_name' => 'Qwen3 1.7B (4-bit)',
-        'licence' => 'Apache-2.0', 'commercial_ok' => true, 'size_mb' => 1100, 'min_tier' => 'mid',
-        'targets' => ['device', 'worker'], 'source_url' => 'https://huggingface.co/Qwen/Qwen3-1.7B',
+        'capability' => 'llm', 'engine' => 'llama.cpp', 'display_name' => 'Qwen3 1.7B',
+        'licence' => 'Apache-2.0', 'commercial_ok' => true, 'size_mb' => 1107, 'min_tier' => 'mid',
+        'targets' => ['device', 'worker'], 'enabled' => true,
+        'source_url' => 'https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf',
+        'sha256' => 'b139949c5bd74937ad8ed8c8cf3d9ffb1e99c866c823204dc42c0d91fa181897',
+        'builds' => [
+            'wllama' => [
+                'file' => 'Qwen3-1.7B-Q4_K_M.gguf', 'bytes' => 1107409472, 'ram_mb' => 1800,
+                'url' => 'https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_K_M.gguf',
+                'sha256' => 'b139949c5bd74937ad8ed8c8cf3d9ffb1e99c866c823204dc42c0d91fa181897',
+            ],
+            'webllm' => [
+                'model_id' => 'Qwen3-1.7B-q4f16_1-MLC', 'bytes' => 984156278, 'ram_mb' => 2037,
+                'url' => 'https://huggingface.co/mlc-ai/Qwen3-1.7B-q4f16_1-MLC',
+            ],
+            'ollama' => ['tag' => 'qwen3:1.7b', 'bytes' => 1359292957],
+        ],
     ],
     'qwen3-4b' => [
         'capability' => 'llm', 'engine' => 'llama.cpp', 'display_name' => 'Qwen3 4B (4-bit)',

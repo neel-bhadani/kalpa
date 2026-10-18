@@ -49,6 +49,7 @@ export type RunnerEvent =
   | { type: 'reply'; text: string }
   | { type: 'step'; step: Step }
   | { type: 'stopped' }
+  | { type: 'usage'; tokens: number; seconds: number }
 
 export type RunnerOptions = {
   brain: Brain
@@ -56,6 +57,8 @@ export type RunnerOptions = {
   api: AiApi
   checkpoint: CheckpointPort
   mode: () => Mode
+  // Instructions sent before the conversation (not stored as a message).
+  system?: string
   onEvent?: (event: RunnerEvent) => void
   // A pause between Auto steps, so each one can be seen happening.
   stepDelayMs?: number
@@ -93,12 +96,15 @@ export class AssistantRunner {
 
       let reply = ''
       const calls: ToolCall[] = []
-      for await (const chunk of brain.chat({ messages: this.history, tools: this.tools(), signal: controller.signal })) {
+      const system: ChatMessage[] = this.options.system ? [{ role: 'system', content: this.options.system }] : []
+      for await (const chunk of brain.chat({ messages: [...system, ...this.history], tools: this.tools(), signal: controller.signal })) {
         if (chunk.type === 'text') {
           reply += chunk.text
           onEvent?.({ type: 'thinking', text: reply })
-        } else {
+        } else if (chunk.type === 'tool_call') {
           calls.push(chunk.call)
+        } else {
+          onEvent?.(chunk)
         }
       }
 
