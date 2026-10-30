@@ -25,6 +25,7 @@ class AssetVersionResource extends JsonResource
             'message' => $this->message,
             'created_by_type' => $this->created_by_type,
             'created_by_id' => $this->created_by_id,
+            'ai_step_id' => $this->ai_step_id,
             'author' => $this->whenLoaded('creator', fn () => $this->creator?->name),
             'files' => $this->whenLoaded('assetFiles', fn () => $this->assetFiles->map(fn (AssetFile $assetFile) => [
                 'role' => $assetFile->role,

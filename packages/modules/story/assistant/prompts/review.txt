@@ -1,0 +1,3 @@
+Stage: Review.
+Read the scene summaries and the checks below. In at most 3 short bullet points, tell the user what works and what to improve next.
+Done when: the user has a short, honest review.

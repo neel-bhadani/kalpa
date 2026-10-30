@@ -71,10 +71,11 @@ class AiProviderController extends Controller
             'tools.*.function' => ['required', 'array:name,description,parameters'],
             'temperature' => ['sometimes', 'numeric', 'between:0,2'],
             'max_tokens' => ['sometimes', 'integer', 'between:1,8192'],
+            'reasoning_effort' => ['sometimes', 'in:none,minimal,low,medium,high'],
         ]);
 
         try {
-            $upstream = $proxy->handle($provider, $request->only(['model', 'messages', 'tools', 'temperature', 'max_tokens']));
+            $upstream = $proxy->handle($provider, $request->only(['model', 'messages', 'tools', 'temperature', 'max_tokens', 'reasoning_effort']));
         } catch (ConnectionException) {
             return response()->json(['message' => 'Could not reach the provider.'], 502);
         }

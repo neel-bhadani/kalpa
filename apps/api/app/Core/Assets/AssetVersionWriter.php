@@ -6,6 +6,7 @@ use App\Core\Modules\ModuleRegistry;
 use App\Core\Modules\ProjectsAssetVersions;
 use App\Core\Sync\ChangeRecorder;
 use App\Enums\ActorType;
+use App\Models\AiStep;
 use App\Models\Asset;
 use App\Models\AssetFile;
 use App\Models\AssetVersion;
@@ -29,6 +30,7 @@ class AssetVersionWriter
     /**
      * @param  list<array{role: string, file_id: string}>  $files
      * @param  list<object>|null  $patch  the JSON Patch that produced $spec, if any
+     * @param  AiStep|null  $step  the assistant step that made it, if any
      *
      * @throws ValidationException for an invalid spec or files from another workspace
      */
@@ -40,6 +42,7 @@ class AssetVersionWriter
         array $files,
         ?string $message,
         User $user,
+        ?AiStep $step = null,
     ): AssetVersion {
         $this->schemas->validate($asset->kind, $spec);
         $files = $this->checkFiles($asset->workspace_id, $files);
@@ -52,10 +55,16 @@ class AssetVersionWriter
             'schema_version' => $this->schemas->version($asset->kind),
             'spec' => $spec,
             'patch' => $patch,
-            'created_by_type' => ActorType::User,
+            // An assistant step's version is the assistant's, made for this person.
+            'created_by_type' => $step ? ActorType::Assistant : ActorType::User,
             'created_by_id' => $user->id,
+            'ai_step_id' => $step?->id,
             'message' => $message,
         ]);
+
+        if ($step !== null && $step->asset_id === null) {
+            $step->update(['asset_id' => $asset->id]);
+        }
 
         foreach ($files as $file) {
             AssetFile::create([

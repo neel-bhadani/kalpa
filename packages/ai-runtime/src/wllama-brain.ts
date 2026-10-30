@@ -33,7 +33,7 @@ export class WllamaBrain extends CompletionBrain {
       tools: request.tools as ChatCompletionParams['tools'],
       stream: true,
       abortSignal: signal,
-      max_tokens: 1024,
+      max_tokens: request.maxTokens ?? 1024,
       temperature: 0.6,
     })
     return stream as AsyncIterable<CompletionChunk>

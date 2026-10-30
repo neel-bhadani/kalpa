@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['workspace_id', 'session_id', 'seq', 'title', 'tool', 'args', 'status', 'asset_id', 'before', 'after',
-    'before_version_id', 'after_version_id', 'job_id', 'preview_file_id', 'error'])]
+    'before_version_id', 'after_version_id', 'job_id', 'preview_file_id', 'error', 'reason'])]
 class AiStep extends Model
 {
     use HasUuids;

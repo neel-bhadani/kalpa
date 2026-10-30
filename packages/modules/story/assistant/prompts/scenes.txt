@@ -1,0 +1,5 @@
+Stage: Scene list.
+Plan exactly {{scenes}} scenes for a script of about {{minutes}} minutes. Each scene has a heading (INT. or EXT. PLACE - DAY or NIGHT) and a one-line summary of what happens and what changes.
+Scenes follow the acts in order. Every scene moves the story forward.
+Call script.addScene once per scene, in order.
+Done when: the script has {{scenes}} scenes, each with a heading and a summary.

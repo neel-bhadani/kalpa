@@ -15,7 +15,8 @@ export type BrainChunk =
   | { type: 'tool_call'; call: ToolCall }
   | { type: 'usage'; tokens: number; seconds: number }
 
-export type ChatRequest = { messages: ChatMessage[]; tools: ToolSpec[]; signal?: AbortSignal }
+// maxTokens caps the reply (small models on a CPU: keep each call short).
+export type ChatRequest = { messages: ChatMessage[]; tools: ToolSpec[]; signal?: AbortSignal; maxTokens?: number }
 
 export interface Brain {
   chat(request: ChatRequest): AsyncIterable<BrainChunk>

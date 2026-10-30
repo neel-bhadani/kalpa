@@ -1,0 +1,7 @@
+Stage: Logline.
+Write the logline (one sentence: who wants what, and what stands in the way) and a synopsis of 3 to 5 sentences that covers the whole story from start to end.
+Answer in exactly this form, nothing else:
+REASON: one short line for the user
+LOGLINE: the one sentence
+SYNOPSIS: the 3 to 5 sentences
+Done when: the story has a logline and a synopsis.

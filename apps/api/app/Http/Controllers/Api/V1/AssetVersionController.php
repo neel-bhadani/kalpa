@@ -38,7 +38,7 @@ class AssetVersionController extends Controller
     }
 
     /**
-     * Body: { base_version, patch: [RFC 6902] | spec: {...}, message?, files?: [{file_id, role}] }.
+     * Body: { base_version, patch: [RFC 6902] | spec: {...}, message?, files?: [{file_id, role}], ai_step_id? }.
      * A stale base_version gets 409 and the current version.
      */
     public function store(Request $request, Asset $asset, CreateAssetVersion $createVersion): AssetVersionResource|JsonResponse
@@ -55,6 +55,7 @@ class AssetVersionController extends Controller
             'files' => ['sometimes', 'array', 'list'],
             'files.*.file_id' => ['required', 'uuid'],
             'files.*.role' => ['required', Rule::enum(AssetFileRole::class)],
+            'ai_step_id' => ['sometimes', 'nullable', 'uuid'],
         ]);
 
         $body = $this->jsonBody($request);
@@ -71,6 +72,7 @@ class AssetVersionController extends Controller
                 $body->spec ?? null,
                 $request->input('message'),
                 $request->input('files'),
+                $request->input('ai_step_id'),
             );
         } catch (VersionConflict $conflict) {
             return response()->json([

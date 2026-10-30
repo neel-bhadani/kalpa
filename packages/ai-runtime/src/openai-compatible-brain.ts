@@ -20,7 +20,10 @@ export class OpenAICompatibleBrain extends CompletionBrain {
   }
 
   protected override async complete(request: CompletionRequest, signal?: AbortSignal): Promise<AsyncIterable<CompletionChunk>> {
-    const response = await this.config.post({ model: this.config.model, ...request, stream: true, stream_options: { include_usage: true } }, signal)
+    const { maxTokens, ...rest } = request
+    // Qwen3 thinks before answering unless told not to; Ollama ignores "/no_think" but takes this.
+    const noThinking = /qwen3/i.test(this.config.model) ? { reasoning_effort: 'none' } : {}
+    const response = await this.config.post({ model: this.config.model, ...rest, ...noThinking, ...(maxTokens ? { max_tokens: maxTokens } : {}), stream: true, stream_options: { include_usage: true } }, signal)
     if (!response.ok) throw await endpointError(response, Boolean(request.tools))
     if (!response.body) throw new Error('The model server sent no answer.')
     return chunks(response.body)

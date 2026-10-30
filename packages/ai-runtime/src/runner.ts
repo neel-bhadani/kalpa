@@ -15,6 +15,8 @@ export type Mode = 'auto' | 'semi' | 'manual'
 
 export type StepStatus = 'planned' | 'awaiting_review' | 'running' | 'done' | 'rejected' | 'undone' | 'failed'
 
+export type SessionStatus = 'active' | 'waiting_user' | 'done' | 'failed' | 'cancelled'
+
 export type Step = {
   id: string
   seq: number
@@ -22,6 +24,8 @@ export type Step = {
   tool: string
   args: Record<string, unknown>
   status: StepStatus
+  // The assistant's one-line reason for the step.
+  reason?: string | null
   // Only the values the step changed, by path (e.g. { "data.notes": "..." }).
   before?: Record<string, unknown> | null
   after?: Record<string, unknown> | null
@@ -30,8 +34,10 @@ export type Step = {
 
 export interface AiApi {
   addMessage(role: 'user' | 'assistant', content: Record<string, unknown>): Promise<unknown>
-  addStep(step: { title: string; tool: string; args: Record<string, unknown>; status: StepStatus }): Promise<Step>
+  addStep(step: { title: string; tool: string; args: Record<string, unknown>; status: StepStatus; reason?: string }): Promise<Step>
   updateStep(id: string, patch: { status: StepStatus; before?: unknown; after?: unknown; error?: string | null }): Promise<Step>
+  // The session's status and a module assistant's plan (optional: only module assistants use it).
+  updateSession?(patch: { status?: SessionStatus; plan?: Record<string, unknown> }): Promise<unknown>
   approve(id: string): Promise<Step>
   reject(id: string): Promise<Step>
   undo(id: string): Promise<Step>

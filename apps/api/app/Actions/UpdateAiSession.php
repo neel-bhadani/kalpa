@@ -11,7 +11,7 @@ class UpdateAiSession
     public function __construct(private ChangeRecorder $changes) {}
 
     /**
-     * @param  array{mode?: string, status?: string, summary?: ?string}  $changes
+     * @param  array{mode?: string, status?: string, summary?: ?string, plan?: object}  $changes
      */
     public function handle(AiSession $session, array $changes): AiSession
     {

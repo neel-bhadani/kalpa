@@ -1,0 +1,10 @@
+[
+  { "id": "radio-surat", "genre": "drama", "minutes": 3, "language": "en", "brief": "A girl in Surat who fixes old radios wants her grandfather's silent radio to play again before Diwali." },
+  { "id": "last-mango", "genre": "comedy", "minutes": 2, "language": "en", "brief": "Two flatmates fight over the last mango in the fridge, and both lose." },
+  { "id": "cctv-tomorrow", "genre": "thriller", "minutes": 4, "language": "en", "brief": "A night-shift security guard notices that the CCTV screens show tomorrow's date." },
+  { "id": "drone-lighthouse", "genre": "science fiction", "minutes": 3, "language": "en", "brief": "A delivery drone falls for the old lighthouse it passes every night." },
+  { "id": "solar-lantern-ad", "genre": "advertisement", "minutes": 1, "language": "en", "brief": "A 60-second ad for a solar lantern that lets a village girl study after dark." },
+  { "id": "recipe-contest", "genre": "family", "minutes": 2, "language": "en", "brief": "A shy boy takes his grandmother's recipe to the school cooking contest." },
+  { "id": "local-train-hi", "genre": "drama", "minutes": 3, "language": "hi", "brief": "मुंबई की लोकल ट्रेन में दो अजनबी एक खोया हुआ बटुआ उसके मालिक तक लौटाने निकलते हैं।" },
+  { "id": "kite-pol-gu", "genre": "family", "minutes": 3, "language": "gu", "brief": "અમદાવાદની પોળમાં ઉતરાયણ પહેલાં એક દાદી અને તેની પૌત્રી તૂટેલો પતંગ સાંધે છે." }
+]

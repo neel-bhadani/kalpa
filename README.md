@@ -40,6 +40,7 @@ The page shows green or red for app, db and redis. API health: `GET /api/v1/heal
 | `make fresh` | `migrate:fresh` on the dev database |
 | `make e2e` | Browser tests (Playwright, `kalpa-e2e`): builds and serves the web app (stops at once if the build fails), makes test users, runs `e2e/tests`, then goes back to the dev server |
 | `make ai-up` / `make ai-down` / `make ai-pull MODEL=…` | Optional local Ollama (`kalpa-ollama`, 3 GB limit) |
+| `make eval-story` | Story assistant quality: writes each brief in `e2e/evals/story-briefs.json` with Local Ollama in Auto mode, checks the results, reports pass rate, time and RAM (`EVAL_MODELS="qwen3:1.7b qwen3:4b"`, `EVAL_ONLY=<brief id>`) |
 
 ## Offline and sync
 

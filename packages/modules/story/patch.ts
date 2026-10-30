@@ -1,4 +1,4 @@
-// JSON Patch (RFC 6902): add, remove, replace and move, applied without changing the document
+// JSON Patch (RFC 6902): add, remove, replace, move and test, applied without changing the document
 // given (only the objects on the changed path are copied). Each apply also returns the inverse
 // patch, which undoes it exactly.
 
@@ -7,6 +7,8 @@ export type Operation =
   | { op: 'remove'; path: string }
   | { op: 'replace'; path: string; value: unknown }
   | { op: 'move'; from: string; path: string }
+  // Checks a value and changes nothing; a patch whose test fails is not applied at all.
+  | { op: 'test'; path: string; value: unknown }
 
 type Container = Record<string, unknown> | unknown[]
 
@@ -52,6 +54,10 @@ function applyOperation(doc: unknown, op: Operation): { doc: unknown; inverse: O
       const parts = parse(op.path)
       const old = get(doc, parts)
       return { doc: update(doc, parts, () => op.value), inverse: [{ op: 'replace', path: op.path, value: old }] }
+    }
+    case 'test': {
+      if (JSON.stringify(get(doc, parse(op.path))) !== JSON.stringify(op.value)) throw new Error(`"${op.path}" has changed.`)
+      return { doc, inverse: [] }
     }
     case 'move': {
       const value = get(doc, parse(op.from))

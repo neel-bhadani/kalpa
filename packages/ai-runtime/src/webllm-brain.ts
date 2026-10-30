@@ -32,7 +32,7 @@ export class WebLLMBrain extends CompletionBrain {
       messages: request.messages,
       stream: true,
       stream_options: { include_usage: true },
-      max_tokens: 1024,
+      max_tokens: request.maxTokens ?? 1024,
       temperature: 0.6,
       extra_body: { enable_thinking: false },
     })

@@ -23,4 +23,6 @@ export default {
   assetKinds: ['story', 'script'],
   // Loaded only when a story task is opened, so the editor (and ProseMirror) is its own chunk.
   editor: () => import('./Editor.vue'),
+  // The Story assistant (stages, per-scene drafting); loaded with the assistant panel.
+  assistant: () => import('./assistant'),
 } satisfies ClientModule

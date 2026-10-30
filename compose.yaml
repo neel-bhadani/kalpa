@@ -94,6 +94,8 @@ services:
       - ./apps/api:/app
       # Asset kind JSON Schemas, shared with the web app.
       - ./packages/schemas:/schemas:ro
+      # Story assistant eval results, for its report (make eval-story).
+      - ./e2e/evals:/evals:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -192,6 +194,8 @@ services:
     volumes:
       - ./apps/web:/kalpa/apps/web
       - ./packages:/kalpa/packages
+      # Story assistant eval: briefs in, results out (make eval-story).
+      - ./e2e/evals:/kalpa/e2e/evals
     mem_limit: 768m
     restart: unless-stopped
 
@@ -230,7 +234,8 @@ services:
       OLLAMA_CONTEXT_LENGTH: 4096
     volumes:
       - ollama-models:/root/.ollama
-    mem_limit: 3g
+    # 3 GB fits qwen3:1.7b with room to spare; qwen3:4b needs more (OLLAMA_MEM_LIMIT=4500m make ai-up).
+    mem_limit: ${OLLAMA_MEM_LIMIT:-3g}
     restart: unless-stopped
 
   # End-to-end tests (Playwright, Apache-2.0). Only for make e2e: the e2e profile keeps it out of

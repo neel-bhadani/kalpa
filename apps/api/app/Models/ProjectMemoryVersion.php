@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Append-only: the database rejects updates and deletes.
  */
-#[Fillable(['workspace_id', 'project_memory_id', 'number', 'patch', 'created_by_type', 'created_by_id'])]
+#[Fillable(['workspace_id', 'project_memory_id', 'number', 'patch', 'created_by_type', 'created_by_id', 'ai_step_id'])]
 class ProjectMemoryVersion extends Model
 {
     use HasUuids;

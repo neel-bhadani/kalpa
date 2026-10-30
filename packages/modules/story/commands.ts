@@ -197,6 +197,21 @@ export const scriptCommands: Record<string, SpecCommand> = {
     },
     change: (spec: ScriptSpec, args) => ({ verb: 'moved', what: 'line', target: args.id, scene: find(spec.scenes, args.scene_id, 'scene') + 1 }),
   },
+  'script.replaceLines': {
+    kind: 'script',
+    description: 'Replace all lines of a scene (e.g. a drafted or rewritten scene).',
+    schema: object({
+      scene_id: id,
+      lines: { type: 'array', items: object({ id, type: lineType, text: { type: 'string', maxLength: LIMITS.lineText }, character_id: { description: 'A story character id, or null.' }, emotion: { type: 'string', maxLength: 50 } }, ['type', 'text']) },
+    }, ['scene_id', 'lines']),
+    patch: (spec: ScriptSpec, args) => {
+      const s = find(spec.scenes, args.scene_id, 'scene')
+      if (args.lines.length > LIMITS.linesPerScene) fail(`A scene has at most ${LIMITS.linesPerScene} lines.`)
+      const lines = args.lines.map((line: any) => ({ id: line.id ?? newId(), type: line.type, text: String(line.text), ...pick(line, ['character_id', 'emotion']) }))
+      return [{ op: 'replace', path: `/scenes/${s}/lines`, value: lines }]
+    },
+    change: (spec: ScriptSpec, args) => ({ verb: 'edited', what: 'scene', target: args.scene_id, scene: find(spec.scenes, args.scene_id, 'scene') + 1 }),
+  },
   'script.removeLine': {
     kind: 'script',
     description: 'Remove a line.',

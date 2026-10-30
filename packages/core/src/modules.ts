@@ -66,6 +66,9 @@ export type ClientModule = {
   commands: Record<string, ModuleCommand>
   // Lazy-loads the editor component (a Vue component; typed loosely to keep core free of Vue).
   editor: () => Promise<{ default: unknown }>
+  // Lazy-loads the module's own assistant (an ai-runtime ModuleAssistantFactory; typed loosely so
+  // core doesn't depend on ai-runtime). Without one, the panel uses the plain assistant loop.
+  assistant?: () => Promise<{ default: unknown }>
 }
 
 // Generic asset kinds owned by the core; any module may create them.

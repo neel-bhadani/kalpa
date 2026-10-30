@@ -1,0 +1,4 @@
+Stage: Brief.
+Read the user's brief and set up the story: a short title, the genre, the tone and the audience.
+Call story.setBrief once. If the brief is too vague to write anything (no subject at all), call ask_user with one short question instead.
+Done when: the story has a title, genre, tone and audience.

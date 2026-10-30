@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Core\Ai\AssistantStep;
 use App\Core\Assets\AssetVersionWriter;
 use App\Core\Exceptions\VersionConflict;
 use App\Models\Asset;
@@ -17,7 +18,8 @@ class CreateAssetVersion
     public function __construct(private AssetVersionWriter $versions) {}
 
     /**
-     * Add a version on top of $baseVersion, from a JSON Patch or a full spec.
+     * Add a version on top of $baseVersion, from a JSON Patch or a full spec. With $aiStepId, the
+     * version is that (running) assistant step's.
      * Files given replace that role's files; other roles carry over from the base version.
      *
      * @param  list<object>|null  $patch  RFC 6902 operations (decoded as objects)
@@ -26,9 +28,11 @@ class CreateAssetVersion
      * @throws VersionConflict when the asset moved past $baseVersion
      * @throws ValidationException for a patch that can't apply or an invalid result
      */
-    public function handle(Asset $asset, User $user, int $baseVersion, ?array $patch, ?object $spec, ?string $message, ?array $files): AssetVersion
+    public function handle(Asset $asset, User $user, int $baseVersion, ?array $patch, ?object $spec, ?string $message, ?array $files, ?string $aiStepId = null): AssetVersion
     {
-        return DB::transaction(function () use ($asset, $user, $baseVersion, $patch, $spec, $message, $files) {
+        $step = AssistantStep::running($aiStepId, $asset->workspace_id);
+
+        return DB::transaction(function () use ($asset, $user, $baseVersion, $patch, $spec, $message, $files, $step) {
             $asset = Asset::whereKey($asset->id)->lockForUpdate()->firstOrFail();
             $current = $asset->currentVersion;
 
@@ -49,7 +53,7 @@ class CreateAssetVersion
                 throw ValidationException::withMessages(['spec' => 'The spec must be a JSON object.']);
             }
 
-            return $this->versions->write($asset, $current, $spec, $patch, $this->mergeFiles($current, $files ?? []), $message, $user);
+            return $this->versions->write($asset, $current, $spec, $patch, $this->mergeFiles($current, $files ?? []), $message, $user, $step);
         });
     }
 

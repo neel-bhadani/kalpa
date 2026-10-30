@@ -1,0 +1,8 @@
+Stage: Polish dialogue, scene {{number}}.
+Make the dialogue sharper and more natural: shorter lines, subtext, each character's own voice. Keep what happens the same. Keep the language.
+Only lines without [brackets] or a TYPE: word are dialogue. Answer with the dialogue lines you change: their number, a colon, the new text. Nothing else. Example:
+REASON: Shorter lines with more bite
+4: Then fix it yourself.
+7: Not tonight.
+Change at most 4 lines. If nothing needs changing, answer only: REASON: The dialogue already works.
+Done when: the scene's dialogue is tight and true to each character.

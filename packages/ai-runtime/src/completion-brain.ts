@@ -10,7 +10,7 @@ import { parseToolCalls, repairPrompt, toolInstructions, VisibleText } from './t
 
 export type WireTool = { type: 'function'; function: { name: string; description: string; parameters: JsonSchema } }
 
-export type CompletionRequest = { messages: ChatMessage[]; tools?: WireTool[] }
+export type CompletionRequest = { messages: ChatMessage[]; tools?: WireTool[]; maxTokens?: number }
 
 export type CompletionChunk = {
   choices?: {
@@ -43,13 +43,15 @@ export type CompletionBrainOptions = {
 
 export class CompletionBrain implements Brain {
   private mode: ToolMode
+  private maxTokens: number | undefined
 
   constructor(private options: CompletionBrainOptions) {
     this.mode = options.tools ?? 'auto'
   }
 
-  async *chat({ messages, tools, signal }: ChatRequest): AsyncIterable<BrainChunk> {
+  async *chat({ messages, tools, signal, maxTokens }: ChatRequest): AsyncIterable<BrainChunk> {
     const prepared = noThinking(messages, this.options.model)
+    this.maxTokens = maxTokens
 
     if (tools.length && this.mode !== 'json') {
       try {
@@ -71,14 +73,14 @@ export class CompletionBrain implements Brain {
 
   // The engine parses tool calls. Tool names travel as "notes_append" (OpenAI allows no dots).
   private async *native(messages: ChatMessage[], tools: ToolSpec[], signal?: AbortSignal): AsyncGenerator<BrainChunk> {
-    const names = new Map(tools.map(tool => [tool.name.replace(/[^\w-]/g, '_'), tool.name]))
-    const wire: WireTool[] = tools.map(tool => ({ type: 'function', function: { name: tool.name.replace(/[^\w-]/g, '_'), description: tool.description, parameters: tool.parameters } }))
+    const names = new Map(tools.map(tool => [wireName(tool.name), tool.name]))
+    const wire: WireTool[] = tools.map(tool => ({ type: 'function', function: { name: wireName(tool.name), description: tool.description, parameters: tool.parameters } }))
 
     const visible = new VisibleText()
     const meter = new Meter(this.options.now)
     const pending = new Map<number, { id?: string; name: string; args: string }>()
 
-    for await (const chunk of await this.complete({ messages, tools: wire }, signal)) {
+    for await (const chunk of await this.complete({ messages, tools: wire, maxTokens: this.maxTokens }, signal)) {
       if (signal?.aborted) throw abortError()
       meter.read(chunk)
       const delta = chunk.choices?.[0]?.delta
@@ -122,7 +124,7 @@ export class CompletionBrain implements Brain {
   private async *text(messages: ChatMessage[], signal: AbortSignal | undefined, show: boolean): AsyncGenerator<BrainChunk, string> {
     const visible = new VisibleText()
     const meter = new Meter(this.options.now)
-    for await (const chunk of await this.complete({ messages }, signal)) {
+    for await (const chunk of await this.complete({ messages, maxTokens: this.maxTokens }, signal)) {
       if (signal?.aborted) throw abortError()
       meter.read(chunk)
       const content = chunk.choices?.[0]?.delta?.content
@@ -187,6 +189,12 @@ class Meter {
     if (this.reported) yield { type: 'usage', ...this.reported }
     else if (this.first !== null && this.tokens > 1) yield { type: 'usage', tokens: this.tokens, seconds: (this.last - this.first) / 1000 }
   }
+}
+
+// A tool's name as engines take it: OpenAI-style names allow no dots ("notes.append" → "notes_append").
+// Prompts that name a tool should use this form, or a model may call a name the engine doesn't know.
+export function wireName(name: string): string {
+  return name.replace(/[^\w-]/g, '_')
 }
 
 export function tokensPerSecond(usage: { tokens: number; seconds: number }): number {

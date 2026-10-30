@@ -19,13 +19,13 @@ class AddAiStep
      *
      * @throws ValidationException for any other starting status
      */
-    public function handle(AiSession $session, string $title, string $tool, object $args, AiStepStatus $status): AiStep
+    public function handle(AiSession $session, string $title, string $tool, object $args, AiStepStatus $status, ?string $reason = null): AiStep
     {
         if (! in_array($status, [AiStepStatus::Planned, AiStepStatus::AwaitingReview, AiStepStatus::Running], true)) {
             throw ValidationException::withMessages(['status' => 'A new step is planned, awaiting_review or running.']);
         }
 
-        return DB::transaction(function () use ($session, $title, $tool, $args, $status) {
+        return DB::transaction(function () use ($session, $title, $tool, $args, $status, $reason) {
             // One step at a time per session, so seq numbers don't clash.
             AiSession::whereKey($session->id)->lockForUpdate()->first();
 
@@ -37,6 +37,7 @@ class AddAiStep
                 'tool' => $tool,
                 'args' => $args,
                 'status' => $status,
+                'reason' => $reason,
             ])->refresh();
 
             $this->changes->upsert($step);

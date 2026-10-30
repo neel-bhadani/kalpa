@@ -20,8 +20,10 @@ type View = { cursor?: Cursor; scrollTop?: number; storyPanel?: boolean }
 type StoryCheckpoint = Checkpoint & { view?: View; story?: Draft<StorySpec>; script?: Draft<ScriptSpec> }
 type Version = { id: string; number: number; message: string | null; author?: string | null; created_at: string; spec?: unknown }
 
-const props = defineProps<{ task: EditorTask; checkpoint: Checkpoint; highlight?: EditorHighlight; readonly?: boolean; api?: EditorApi }>()
-const emit = defineEmits<{ 'update:checkpoint': [checkpoint: Checkpoint] }>()
+// aiBusy: the Story assistant is writing; the page is locked until it's done.
+const props = defineProps<{ task: EditorTask; checkpoint: Checkpoint; highlight?: EditorHighlight; readonly?: boolean; api?: EditorApi; aiBusy?: boolean }>()
+const emit = defineEmits<{ 'update:checkpoint': [checkpoint: Checkpoint]; 'assistant': [request: Record<string, unknown>] }>()
+const locked = computed(() => Boolean(props.readonly || props.aiBusy))
 
 const LANGUAGES = [
   ['en', 'English'], ['hi', 'हिन्दी'], ['gu', 'ગુજરાતી'], ['mr', 'मराठी'], ['bn', 'বাংলা'],
@@ -175,16 +177,18 @@ function persist() {
   const wait = Math.max(0, Math.min(PAUSE_MS, firstUnsaved + MAX_WAIT_MS - Date.now()))
   persistTimer = setTimeout(() => {
     persistTimer = null
-    if ('requestIdleCallback' in window) window.requestIdleCallback(persistNow, { timeout: 500 })
+    if ('requestIdleCallback' in window) window.requestIdleCallback(() => persistNow(), { timeout: 500 })
     else persistNow()
   }, wait)
 }
 
-function persistNow() {
+// force: save even while the assistant writes (only once, as it starts). Otherwise the assistant's
+// drafts in the checkpoint are the newest, and this editor must not write an older copy over them.
+function persistNow(force = false) {
   if (persistTimer) clearTimeout(persistTimer)
   persistTimer = null
   firstUnsaved = null
-  if (props.readonly) return
+  if (props.readonly || (props.aiBusy && !force)) return
   const stamp = <D extends Draft<any>>(draft: D | null) => (draft ? { ...draft, writer: editorId } : undefined)
   const next: StoryCheckpoint = { ...props.checkpoint, view, story: stamp(story.value), script: stamp(script.value) }
   emit('update:checkpoint', next)
@@ -224,6 +228,7 @@ function commitAll(): Promise<unknown> {
 // ---- Edits.
 
 function changed(kind: SpecKind) {
+  if (props.aiBusy) return
   committers[kind].touched()
   persist()
 }
@@ -242,7 +247,7 @@ const actionError = ref('')
 function run(name: string, args: Record<string, unknown>) {
   const kind: SpecKind = name.startsWith('script.') ? 'script' : 'story'
   const draft = drafts[kind].value
-  if (!draft || props.readonly) return
+  if (!draft || locked.value) return
   actionError.value = ''
   try {
     setDraft(kind, runCommand(draft, name, args).draft, kind === 'script')
@@ -312,6 +317,28 @@ async function restore(number: number) {
   }
 }
 
+// ---- Write with AI: a brief for the Story assistant, which writes in the assistant panel.
+
+const writeForm = reactive({ open: false, brief: '', minutes: 5, mode: 'semi' as 'auto' | 'semi' | 'manual' })
+const isBlank = computed(() => !story.value?.spec.logline && (script.value?.spec.scenes ?? []).every(scene => !scene.lines.length && !scene.heading))
+watch(isBlank, (blank) => { if (blank && !props.readonly) writeForm.open = true }, { immediate: true })
+watch(() => story.value?.spec.target_length, (minutes) => { if (minutes) writeForm.minutes = minutes }, { immediate: true })
+
+function writeWithAi() {
+  const brief = writeForm.brief.trim()
+  if (!brief) return
+  writeForm.open = false
+  emit('assistant', { brief, minutes: writeForm.minutes, mode: writeForm.mode, language: language.value })
+}
+
+// While the assistant writes, this editor saves what it has and stops its own commits; the
+// assistant commits any unsaved edits before its first step.
+watch(() => props.aiBusy, (busy) => {
+  if (!busy) return
+  persistNow(true)
+  for (const kind of ['story', 'script'] as const) committers[kind].dispose()
+})
+
 // ---- Keys and leaving.
 
 function onKey(event: KeyboardEvent) {
@@ -370,7 +397,33 @@ onBeforeUnmount(() => {
         {{ status }}
       </button>
       <button v-if="script" class="text-muted hover:text-text" :aria-pressed="storyPanel" @click="toggleStoryPanel">Story</button>
+      <button v-if="!readonly" class="rounded-md bg-accent/15 px-2 py-1 text-accent hover:bg-accent/25 disabled:opacity-50" :disabled="aiBusy" data-test="write-with-ai-toggle" @click="writeForm.open = !writeForm.open">
+        {{ aiBusy ? 'AI is writing…' : 'Write with AI' }}
+      </button>
     </header>
+
+    <form v-if="writeForm.open && !locked" class="grid gap-2 border-b border-muted/15 px-4 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]" data-test="write-with-ai" @submit.prevent="writeWithAi">
+      <textarea
+        v-model="writeForm.brief"
+        rows="2"
+        maxlength="2000"
+        class="field !mt-0"
+        placeholder="A 5-minute short film about a girl in Surat who fixes old radios"
+        aria-label="What should the AI write?"
+        data-test="write-brief"
+      />
+      <label class="text-xs text-muted">Minutes
+        <input v-model.number="writeForm.minutes" type="number" min="1" max="180" class="field !mt-0 w-20 font-mono" data-test="write-minutes">
+      </label>
+      <label class="text-xs text-muted">Mode
+        <select v-model="writeForm.mode" class="field !mt-0" data-test="write-mode">
+          <option value="auto">Auto</option>
+          <option value="semi">Semi (approve each stage)</option>
+          <option value="manual">Manual (suggestions)</option>
+        </select>
+      </label>
+      <button :disabled="!writeForm.brief.trim()" class="self-end rounded-lg bg-accent px-3 py-2 font-medium text-bg disabled:opacity-50" data-test="write-start">Write</button>
+    </form>
 
     <p v-if="loadError" class="px-4 py-2 text-xs text-red-400">{{ loadError }}</p>
     <p v-if="actionError" class="px-4 py-2 text-xs text-red-400" data-test="editor-error">{{ actionError }}</p>
@@ -403,7 +456,7 @@ onBeforeUnmount(() => {
         :acts="story?.spec.acts ?? []"
         :scenes="scenes"
         :current-scene-id="currentSceneId"
-        :readonly="readonly"
+        :readonly="locked"
         @go-to-scene="screenplay?.goToScene($event)"
         @move-scene="(id, to) => run('script.moveScene', { id, to })"
         @move-act="(id, to) => run('story.moveAct', { id, to })"
@@ -414,7 +467,7 @@ onBeforeUnmount(() => {
           ref="screenplay"
           :script="script.spec"
           :characters="characters"
-          :readonly="readonly"
+          :readonly="locked"
           :language="language"
           @change="onScriptChange"
           @cursor="onCursor"
@@ -431,10 +484,10 @@ onBeforeUnmount(() => {
           <textarea :value="act.summary ?? ''" :disabled="readonly" aria-label="Act summary" rows="3" maxlength="5000" placeholder="What happens" class="mt-2 w-full resize-y bg-transparent text-sm text-muted outline-none" @change="run('story.updateAct', { id: act.id, summary: ($event.target as HTMLTextAreaElement).value })" />
         </div>
         <button v-if="!readonly" class="rounded-lg border border-muted/30 px-3 py-1.5 text-xs hover:border-accent hover:text-accent" @click="run('story.addAct', { title: `Act ${(story.spec.acts?.length ?? 0) + 1}` })">Add act</button>
-        <StoryPanel :story="story.spec" :readonly="readonly" @run="run" />
+        <StoryPanel :story="story.spec" :readonly="locked" @run="run" />
       </div>
 
-      <StoryPanel v-if="script && story && storyPanel" :story="story.spec" :readonly="readonly" @run="run" />
+      <StoryPanel v-if="script && story && storyPanel" :story="story.spec" :readonly="locked" @run="run" />
     </div>
   </div>
 </template>

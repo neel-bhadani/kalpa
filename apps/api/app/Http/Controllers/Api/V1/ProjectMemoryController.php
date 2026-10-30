@@ -34,6 +34,7 @@ class ProjectMemoryController extends Controller
             'patch' => ['required', 'array', 'list', 'min:1'],
             'patch.*.op' => ['required', 'in:add,remove,replace,move,copy,test'],
             'patch.*.path' => ['present'],
+            'ai_step_id' => ['sometimes', 'nullable', 'uuid'],
         ]);
 
         try {
@@ -42,6 +43,7 @@ class ProjectMemoryController extends Controller
                 $request->integer('base_version'),
                 $this->jsonBody($request)->patch,
                 $request->user(),
+                $request->input('ai_step_id'),
             );
         } catch (VersionConflict $conflict) {
             return response()->json([

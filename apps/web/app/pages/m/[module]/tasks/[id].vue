@@ -33,6 +33,17 @@ const assistantPort: CheckpointPort = {
   },
 }
 const showAssistant = ref(localStorage.getItem('kalpa.assistant') !== 'hidden')
+// The module's assistant is writing: the editor locks itself until it's done.
+const assistantBusy = ref(false)
+const panel = ref<{ startWriting: (request: Record<string, unknown>) => Promise<void> } | null>(null)
+
+// "Write with AI" in the editor: open the panel and start.
+async function writeWithAi(request: Record<string, unknown>) {
+  showAssistant.value = true
+  await loadOutputs().catch(() => undefined)
+  for (let i = 0; i < 50 && !panel.value; i++) await new Promise(resolve => setTimeout(resolve, 100))
+  await panel.value?.startWriting(request)
+}
 watch(showAssistant, value => localStorage.setItem('kalpa.assistant', value ? 'shown' : 'hidden'))
 
 // The module's editor, downloaded only now (its own chunk).
@@ -176,15 +187,22 @@ try {
             :highlight="highlight"
             :readonly="!canEdit"
             :api="api"
+            :ai-busy="assistantBusy"
             @update:checkpoint="onEditorChange"
+            @assistant="writeWithAi"
           />
         </div>
         <AssistantPanel
           v-if="showAssistant && !offline && checkpoint.ready.value"
           class="lg:sticky lg:top-4 lg:h-[calc(100vh-8rem)]"
           :task-id="taskId"
+          ref="panel"
           :module="task.module"
           :checkpoint="assistantPort"
+          :project-id="task.project_id"
+          :task-title="task.title"
+          :outputs="task.outputs ?? []"
+          @busy="assistantBusy = $event"
         />
       </div>
     </template>

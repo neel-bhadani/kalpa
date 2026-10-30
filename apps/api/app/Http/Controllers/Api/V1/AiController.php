@@ -25,6 +25,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Assistant sessions, messages and steps. The browser runs the assistant (packages/ai-runtime)
@@ -74,7 +75,16 @@ class AiController extends Controller
             'mode' => ['sometimes', Rule::enum(TaskMode::class)],
             'status' => ['sometimes', Rule::enum(AiSessionStatus::class)],
             'summary' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            // A module assistant's plan (where a multi-step job is, so it can continue). At most 64 KB.
+            'plan' => ['sometimes', 'array'],
         ]);
+        if (array_key_exists('plan', $data)) {
+            $plan = $this->jsonBody($request)->plan;
+            if (! is_object($plan) || strlen((string) json_encode($plan)) > 65536) {
+                throw ValidationException::withMessages(['plan' => 'The plan must be a JSON object of at most 64 KB.']);
+            }
+            $data['plan'] = $plan;
+        }
 
         return new AiSessionResource($update->handle($session, $data));
     }
@@ -98,7 +108,7 @@ class AiController extends Controller
     }
 
     /**
-     * Body: { title, tool, args: {...}, status: planned|awaiting_review|running }.
+     * Body: { title, tool, args: {...}, status: planned|awaiting_review|running, reason? }.
      */
     public function addStep(Request $request, AiSession $session, AddAiStep $addStep): JsonResponse
     {
@@ -109,6 +119,7 @@ class AiController extends Controller
             'tool' => ['required', 'string', 'max:100'],
             'args' => ['present', 'array'],
             'status' => ['required', Rule::enum(AiStepStatus::class)],
+            'reason' => ['sometimes', 'nullable', 'string', 'max:300'],
         ]);
 
         $step = $addStep->handle(
@@ -117,6 +128,7 @@ class AiController extends Controller
             $request->input('tool'),
             (object) $this->jsonBody($request)->args,
             AiStepStatus::from($request->input('status')),
+            $request->input('reason'),
         );
 
         return (new AiStepResource($step))->response()->setStatusCode(201);

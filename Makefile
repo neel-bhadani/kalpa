@@ -1,4 +1,4 @@
-.PHONY: up down logs ps sh-api sh-web test test-api test-web module-keys typecheck fresh web-build web-preview web-dev e2e wait-preview ai-up ai-down ai-pull
+.PHONY: up down logs ps sh-api sh-web test test-api test-web module-keys typecheck fresh web-build web-preview web-dev e2e wait-preview ai-up ai-down ai-pull eval-story
 
 up:
 	docker compose up -d --build
@@ -82,3 +82,9 @@ ai-down:
 MODEL ?= qwen3:1.7b
 ai-pull:
 	docker compose --profile ai exec ollama ollama pull $(MODEL)
+
+# Story assistant quality: every brief in e2e/evals/story-briefs.json, in Auto mode, against
+# kalpa-ollama (started if needed). Checks each result and reports pass rate, time and RAM.
+# Other models: make eval-story EVAL_MODELS="qwen3:1.7b qwen3:4b". One brief: EVAL_ONLY=radio-surat.
+eval-story:
+	sh e2e/evals/run.sh

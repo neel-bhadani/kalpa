@@ -18,6 +18,7 @@ class AiStepResource extends JsonResource
             'session_id' => $this->session_id,
             'seq' => $this->seq,
             'title' => $this->title,
+            'reason' => $this->reason,
             'tool' => $this->tool,
             'args' => $this->args,
             'status' => $this->status,

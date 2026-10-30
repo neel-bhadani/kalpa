@@ -1,0 +1,4 @@
+Stage: Outline.
+Split the story into {{acts}} acts. Give each act a short title and a 2-sentence summary. The last act resolves what the lead wants.
+Call story.addAct once per act, in order.
+Done when: the story has its acts, each with a summary.

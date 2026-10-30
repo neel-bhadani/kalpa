@@ -1,0 +1,12 @@
+Stage: Draft scene {{number}} of {{total}}.
+Write this scene as a screenplay, about {{lines}} lines, in {{language}}.
+Answer with lines in exactly this form, nothing else. One line for each action, one line for each speech; never put speech inside an ACTION line. Keep the words REASON, SUMMARY, ACTION and TRANSITION in English; write everything after them in {{language}}.
+Example of the form:
+REASON: one short line for the user about what this scene does
+SUMMARY: one line saying what happens in the scene
+ACTION: {{first}} looks at the door.
+{{first}}: Who's there?
+{{second}} (quietly): Only me.
+TRANSITION: CUT TO:
+Only these characters speak: {{cast}}. Use the names exactly as written.
+Done when: the scene has action and dialogue that play out its summary.

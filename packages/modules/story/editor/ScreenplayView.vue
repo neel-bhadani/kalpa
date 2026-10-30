@@ -52,6 +52,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => view?.destroy())
 
+// Locked or unlocked (e.g. while the assistant writes).
+watch(() => props.readonly, () => view?.setProps({}))
+
 // A new character in the story, or another language: read the lines again (speakers, capitals).
 watch(() => [props.characters, props.language], () => {
   if (!view) return

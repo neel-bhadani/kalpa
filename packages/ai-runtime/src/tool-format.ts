@@ -58,7 +58,8 @@ export function parseToolCalls(output: string, tools: ToolSpec[], idPrefix = 'ca
       problems.push(`${label} has no "name".`)
       continue
     }
-    const name = value.name
+    // "notes_append" and "notes.append" are the same tool.
+    const name = tools.find(tool => tool.name === value.name || tool.name.replace(/[^\w-]/g, '_') === value.name)?.name ?? value.name
 
     let args = value.arguments ?? {}
     if (typeof args === 'string') {

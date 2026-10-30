@@ -1,0 +1,4 @@
+Stage: Characters.
+Create {{characters}} characters the story needs: the lead first. Give each a name that fits the setting, a role (lead, friend, rival, parent...) and one sentence about what they want.
+Call story.addCharacter once per character.
+Done when: the story has its characters, each with a role and a description.

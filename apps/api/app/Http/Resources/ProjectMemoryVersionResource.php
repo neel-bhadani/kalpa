@@ -19,6 +19,7 @@ class ProjectMemoryVersionResource extends JsonResource
             'patch' => $this->patch,
             'created_by_type' => $this->created_by_type,
             'created_by_id' => $this->created_by_id,
+            'ai_step_id' => $this->ai_step_id,
             'created_at' => $this->created_at,
         ];
     }

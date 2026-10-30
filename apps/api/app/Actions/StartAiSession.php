@@ -38,7 +38,8 @@ class StartAiSession
         return DB::transaction(function () use ($task, $user, $mode, $model) {
             // Lock the task so two devices starting at once can't both create a session.
             Task::whereKey($task->id)->lockForUpdate()->first();
-            $active = AiSession::where('task_id', $task->id)->where('status', AiSessionStatus::Active)->first();
+            // Waiting for the user's answer counts as open too.
+            $active = AiSession::where('task_id', $task->id)->whereIn('status', [AiSessionStatus::Active, AiSessionStatus::WaitingUser])->first();
             if ($active !== null) {
                 return $active;
             }
